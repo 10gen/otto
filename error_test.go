@@ -1,6 +1,7 @@
 package otto
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -345,6 +346,130 @@ func TestMakeCustomErrorFreshVM(t *testing.T) {
 		}
 
 		is(str, "CarrotError: carrots is life, carrots is love")
+	})
+}
+
+func TestMakeNativeErrorReturn(t *testing.T) {
+	tt(t, func() {
+		vm := New()
+
+		carrotErr := errors.New("carrots is life, carrots is love")
+		vm.Set("A", func(c FunctionCall) Value {
+			nativeErr, _ := vm.MakeNativeError("CarrotError", carrotErr)
+			return nativeErr
+		})
+
+		s, _ := vm.Compile("test.js", `
+			function B() { return A(); }
+			function C() { return B(); }
+			function D() { return C(); }
+		`)
+
+		if _, err := vm.Run(s); err != nil {
+			panic(err)
+		}
+
+		v, err := vm.Call("D", nil)
+		if err != nil {
+			panic(err)
+		}
+
+		is(v.Class(), "Error")
+
+		name, err := v.Object().Get("name")
+		if err != nil {
+			panic(err)
+		}
+		is(name.String(), "CarrotError")
+
+		message, err := v.Object().Get("message")
+		if err != nil {
+			panic(err)
+		}
+		is(message.String(), "carrots is life, carrots is love")
+
+		str, err := v.Object().Call("toString")
+		if err != nil {
+			panic(err)
+		}
+		is(str, "CarrotError: carrots is life, carrots is love")
+
+		i, err := v.Export()
+		if err != nil {
+			panic(err)
+		}
+		t.Logf("%#v\n", i)
+	})
+}
+
+func TestMakeNativeError(t *testing.T) {
+	tt(t, func() {
+		vm := New()
+
+		carrotErr := errors.New("carrots is life, carrots is love")
+		vm.Set("A", func(c FunctionCall) Value {
+			nativeErr, _ := vm.MakeNativeError("CarrotError", carrotErr)
+			panic(nativeErr)
+
+			return UndefinedValue()
+		})
+
+		s, _ := vm.Compile("test.js", `
+			function B() { A(); }
+			function C() { B(); }
+			function D() { C(); }
+		`)
+
+		if _, err := vm.Run(s); err != nil {
+			panic(err)
+		}
+
+		_, err := vm.Call("D", nil)
+		if err == nil {
+			panic("error should not be nil")
+		}
+
+		is(err.Error(), "CarrotError: carrots is life, carrots is love")
+
+		er := err.(*Error)
+
+		is(er.name, "CarrotError")
+		is(er.message, "carrots is life, carrots is love")
+		is(er._error.nativeErr, carrotErr)
+	})
+}
+
+func TestMakeNativeErrorFreshVM(t *testing.T) {
+	tt(t, func() {
+		vm := New()
+
+		carrotErr := errors.New("carrots is life, carrots is love")
+		e, err := vm.MakeNativeError("CarrotError", carrotErr)
+		if err != nil {
+			panic(err)
+		}
+
+		str, err := e.ToString()
+		if err != nil {
+			panic(err)
+		}
+
+		is(str, "CarrotError: carrots is life, carrots is love")
+	})
+}
+
+func TestMakeNativeErrorAlreadyRegistered(t *testing.T) {
+	tt(t, func() {
+		vm := New()
+
+		if err := vm.Set("CarrotError", toValue_bool(false)); err != nil {
+			panic(err)
+		}
+
+		carrotErr := errors.New("carrots is life, carrots is love")
+		e, err := vm.MakeNativeError("CarrotError", carrotErr)
+		is(e, UndefinedValue())
+		is(err, "=~", "global property already defined")
 	})
 }
 

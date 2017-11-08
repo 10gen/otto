@@ -5,11 +5,11 @@ import (
 )
 
 func builtinError(call FunctionCall) Value {
-	return toValue_object(call.runtime.newError("Error", call.Argument(0), 1))
+	return toValue_object(call.runtime.newError("Error", call.Argument(0), nil, 1))
 }
 
 func builtinNewError(self *_object, argumentList []Value) Value {
-	return toValue_object(self.runtime.newError("Error", valueOfArrayIndex(argumentList, 0), 0))
+	return toValue_object(self.runtime.newError("Error", valueOfArrayIndex(argumentList, 0), nil, 0))
 }
 
 func builtinError_toString(call FunctionCall) Value {
@@ -41,8 +41,99 @@ func builtinError_toString(call FunctionCall) Value {
 	return toValue_string(fmt.Sprintf("%s: %s", name, message))
 }
 
+func (runtime *_runtime) newNativeError(className string, err error) (*_object, error) {
+	self := runtime.newErrorObject(className, runtime.toValue(err.Error()), err, 0)
+	proto, err := runtime.getOrRegisterNativeErrorPrototype(className)
+	if err != nil {
+		return nil, err
+	}
+	self.prototype = proto
+	return self, nil
+}
+
+func (runtime *_runtime) getOrRegisterNativeErrorPrototype(className string) (*_object, error) {
+	if value := runtime.globalObject.get(className); !value.IsUndefined() {
+		// Make sure the value looks like a native error
+		valueObj := value._object()
+		if valueObj == nil || valueObj.class != "Function" {
+			return nil, fmt.Errorf("global property already defined for %q", className)
+		}
+		if nativeObj, ok := valueObj.value.(_nativeFunctionObject); ok && nativeObj.name == className {
+			return valueObj.get("prototype")._object(), nil
+		}
+		return nil, fmt.Errorf("global property already defined for %q", className)
+	}
+
+	proto := &_object{
+		runtime:     runtime,
+		class:       className,
+		objectClass: _classObject,
+		prototype:   runtime.global.ErrorPrototype,
+		extensible:  true,
+		value:       nil,
+		property: map[string]_property{
+			"name": _property{
+				mode: 0101,
+				value: Value{
+					kind:  valueString,
+					value: className,
+				},
+			},
+		},
+		propertyOrder: []string{
+			"name",
+		},
+	}
+
+	errFunc := &_object{
+		runtime:     runtime,
+		class:       "Function",
+		objectClass: _classObject,
+		prototype:   runtime.global.FunctionPrototype,
+		extensible:  true,
+		value: _nativeFunctionObject{
+			name: className,
+			call: func(call FunctionCall) Value {
+				panic(&_exception{
+					value: newError(runtime, "Error", 0, nil, "cannot call "+className),
+				})
+			},
+			construct: func(self *_object, argumentList []Value) Value {
+				panic(&_exception{
+					value: newError(runtime, "Error", 0, nil, "cannot construct a "+className),
+				})
+			},
+		},
+		property: map[string]_property{
+			"length": _property{
+				mode: 0,
+				value: Value{
+					kind:  valueNumber,
+					value: 1,
+				},
+			},
+			"prototype": _property{
+				mode: 0,
+				value: Value{
+					kind:  valueObject,
+					value: proto,
+				},
+			},
+		},
+		propertyOrder: []string{
+			"length",
+			"prototype",
+		},
+	}
+
+	if !runtime.globalObject.defineProperty(className, toValue_object(errFunc), 0, false) {
+		return nil, fmt.Errorf("failed to define property for native error %q", className)
+	}
+	return proto, nil
+}
+
 func (runtime *_runtime) newEvalError(message Value) *_object {
-	self := runtime.newErrorObject("EvalError", message, 0)
+	self := runtime.newErrorObject("EvalError", message, nil, 0)
 	self.prototype = runtime.global.EvalErrorPrototype
 	return self
 }
@@ -56,7 +147,7 @@ func builtinNewEvalError(self *_object, argumentList []Value) Value {
 }
 
 func (runtime *_runtime) newTypeError(message Value) *_object {
-	self := runtime.newErrorObject("TypeError", message, 0)
+	self := runtime.newErrorObject("TypeError", message, nil, 0)
 	self.prototype = runtime.global.TypeErrorPrototype
 	return self
 }
@@ -70,7 +161,7 @@ func builtinNewTypeError(self *_object, argumentList []Value) Value {
 }
 
 func (runtime *_runtime) newRangeError(message Value) *_object {
-	self := runtime.newErrorObject("RangeError", message, 0)
+	self := runtime.newErrorObject("RangeError", message, nil, 0)
 	self.prototype = runtime.global.RangeErrorPrototype
 	return self
 }
@@ -84,13 +175,13 @@ func builtinNewRangeError(self *_object, argumentList []Value) Value {
 }
 
 func (runtime *_runtime) newURIError(message Value) *_object {
-	self := runtime.newErrorObject("URIError", message, 0)
+	self := runtime.newErrorObject("URIError", message, nil, 0)
 	self.prototype = runtime.global.URIErrorPrototype
 	return self
 }
 
 func (runtime *_runtime) newReferenceError(message Value) *_object {
-	self := runtime.newErrorObject("ReferenceError", message, 0)
+	self := runtime.newErrorObject("ReferenceError", message, nil, 0)
 	self.prototype = runtime.global.ReferenceErrorPrototype
 	return self
 }
@@ -104,7 +195,7 @@ func builtinNewReferenceError(self *_object, argumentList []Value) Value {
 }
 
 func (runtime *_runtime) newSyntaxError(message Value) *_object {
-	self := runtime.newErrorObject("SyntaxError", message, 0)
+	self := runtime.newErrorObject("SyntaxError", message, nil, 0)
 	self.prototype = runtime.global.SyntaxErrorPrototype
 	return self
 }

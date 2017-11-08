@@ -24,9 +24,10 @@ func (self *_exception) eject() interface{} {
 }
 
 type _error struct {
-	name    string
-	message string
-	trace   []_frame
+	name      string
+	message   string
+	nativeErr error
+	trace     []_frame
 
 	offset int
 }
@@ -106,6 +107,10 @@ func (err Error) Error() string {
 	return err.format()
 }
 
+func (err Error) NativeError() error {
+	return err.nativeErr
+}
+
 // String returns a description of the error and a trace of where the
 // error occurred.
 //
@@ -135,10 +140,11 @@ func (rt *_runtime) typeErrorResult(throw bool) bool {
 	return false
 }
 
-func newError(rt *_runtime, name string, stackFramesToPop int, in ...interface{}) _error {
+func newError(rt *_runtime, name string, stackFramesToPop int, nativeErr error, in ...interface{}) _error {
 	err := _error{
-		name:   name,
-		offset: -1,
+		name:      name,
+		offset:    -1,
+		nativeErr: nativeErr,
 	}
 	description := ""
 	length := len(in)
@@ -193,31 +199,31 @@ func newError(rt *_runtime, name string, stackFramesToPop int, in ...interface{}
 
 func (rt *_runtime) panicTypeError(argumentList ...interface{}) *_exception {
 	return &_exception{
-		value: newError(rt, "TypeError", 0, argumentList...),
+		value: newError(rt, "TypeError", 0, nil, argumentList...),
 	}
 }
 
 func (rt *_runtime) panicReferenceError(argumentList ...interface{}) *_exception {
 	return &_exception{
-		value: newError(rt, "ReferenceError", 0, argumentList...),
+		value: newError(rt, "ReferenceError", 0, nil, argumentList...),
 	}
 }
 
 func (rt *_runtime) panicURIError(argumentList ...interface{}) *_exception {
 	return &_exception{
-		value: newError(rt, "URIError", 0, argumentList...),
+		value: newError(rt, "URIError", 0, nil, argumentList...),
 	}
 }
 
 func (rt *_runtime) panicSyntaxError(argumentList ...interface{}) *_exception {
 	return &_exception{
-		value: newError(rt, "SyntaxError", 0, argumentList...),
+		value: newError(rt, "SyntaxError", 0, nil, argumentList...),
 	}
 }
 
 func (rt *_runtime) panicRangeError(argumentList ...interface{}) *_exception {
 	return &_exception{
-		value: newError(rt, "RangeError", 0, argumentList...),
+		value: newError(rt, "RangeError", 0, nil, argumentList...),
 	}
 }
 
