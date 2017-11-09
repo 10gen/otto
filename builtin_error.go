@@ -41,29 +41,7 @@ func builtinError_toString(call FunctionCall) Value {
 	return toValue_string(fmt.Sprintf("%s: %s", name, message))
 }
 
-func (runtime *_runtime) newNativeError(className string, err error) (*_object, error) {
-	self := runtime.newErrorObject(className, runtime.toValue(err.Error()), err, 0)
-	proto, err := runtime.getOrRegisterNativeErrorPrototype(className)
-	if err != nil {
-		return nil, err
-	}
-	self.prototype = proto
-	return self, nil
-}
-
-func (runtime *_runtime) getOrRegisterNativeErrorPrototype(className string) (*_object, error) {
-	if value := runtime.globalObject.get(className); !value.IsUndefined() {
-		// Make sure the value looks like a native error
-		valueObj := value._object()
-		if valueObj == nil || valueObj.class != "Function" {
-			return nil, fmt.Errorf("global property already defined for %q", className)
-		}
-		if nativeObj, ok := valueObj.value.(_nativeFunctionObject); ok && nativeObj.name == className {
-			return valueObj.get("prototype")._object(), nil
-		}
-		return nil, fmt.Errorf("global property already defined for %q", className)
-	}
-
+func (runtime *_runtime) getNativeErrorFunction(className string) *_object {
 	proto := &_object{
 		runtime:     runtime,
 		class:       className,
@@ -126,10 +104,7 @@ func (runtime *_runtime) getOrRegisterNativeErrorPrototype(className string) (*_
 		},
 	}
 
-	if !runtime.globalObject.defineProperty(className, toValue_object(errFunc), 0, false) {
-		return nil, fmt.Errorf("failed to define property for native error %q", className)
-	}
-	return proto, nil
+	return errFunc
 }
 
 func (runtime *_runtime) newEvalError(message Value) *_object {

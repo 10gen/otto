@@ -349,14 +349,14 @@ func TestMakeCustomErrorFreshVM(t *testing.T) {
 	})
 }
 
-func TestMakeNativeErrorReturn(t *testing.T) {
+func TestCreateNativeErrorReturn(t *testing.T) {
 	tt(t, func() {
 		vm := New()
 
+		_, ctor := vm.CreateNativeError("CarrotError")
 		carrotErr := errors.New("carrots is life, carrots is love")
 		vm.Set("A", func(c FunctionCall) Value {
-			nativeErr, _ := vm.MakeNativeError("CarrotError", carrotErr)
-			return nativeErr
+			return ctor(carrotErr)
 		})
 
 		s, _ := vm.Compile("test.js", `
@@ -402,16 +402,14 @@ func TestMakeNativeErrorReturn(t *testing.T) {
 	})
 }
 
-func TestMakeNativeError(t *testing.T) {
+func TestCreateNativeError(t *testing.T) {
 	tt(t, func() {
 		vm := New()
 
+		_, ctor := vm.CreateNativeError("CarrotError")
 		carrotErr := errors.New("carrots is life, carrots is love")
 		vm.Set("A", func(c FunctionCall) Value {
-			nativeErr, _ := vm.MakeNativeError("CarrotError", carrotErr)
-			panic(nativeErr)
-
-			return UndefinedValue()
+			panic(ctor(carrotErr))
 		})
 
 		s, _ := vm.Compile("test.js", `
@@ -439,15 +437,13 @@ func TestMakeNativeError(t *testing.T) {
 	})
 }
 
-func TestMakeNativeErrorFreshVM(t *testing.T) {
+func TestCreateNativeErrorFreshVM(t *testing.T) {
 	tt(t, func() {
 		vm := New()
 
+		_, ctor := vm.CreateNativeError("CarrotError")
 		carrotErr := errors.New("carrots is life, carrots is love")
-		e, err := vm.MakeNativeError("CarrotError", carrotErr)
-		if err != nil {
-			panic(err)
-		}
+		e := ctor(carrotErr)
 
 		str, err := e.ToString()
 		if err != nil {
@@ -458,18 +454,32 @@ func TestMakeNativeErrorFreshVM(t *testing.T) {
 	})
 }
 
-func TestMakeNativeErrorAlreadyRegistered(t *testing.T) {
+func TestCreateNativeErrorInstanceOf(t *testing.T) {
 	tt(t, func() {
 		vm := New()
 
-		if err := vm.Set("CarrotError", toValue_bool(false)); err != nil {
-			panic(err)
-		}
-
+		errFunc, ctor := vm.CreateNativeError("CarrotError")
 		carrotErr := errors.New("carrots is life, carrots is love")
-		e, err := vm.MakeNativeError("CarrotError", carrotErr)
-		is(e, UndefinedValue())
-		is(err, "=~", "global property already defined")
+		e := ctor(carrotErr)
+
+		vm.Set("e", e)
+		_, err := vm.Run("e instanceof CarrotError")
+		is(err, "!=", nil)
+		is(err.Error(), "ReferenceError: 'CarrotError' is not defined")
+
+		vm.Set("CarrotError", errFunc)
+		ret, err := vm.Run("e instanceof CarrotError")
+		is(err, nil)
+		is(ret, true)
+
+		ret, err = vm.Run("5 instanceof CarrotError")
+		is(err, nil)
+		is(ret, false)
+
+		vm.Set("AliasedError", errFunc)
+		ret, err = vm.Run("e instanceof AliasedError")
+		is(err, nil)
+		is(ret, true)
 	})
 }
 

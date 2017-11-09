@@ -397,15 +397,17 @@ func (self Otto) MakeCustomError(name, message string) Value {
 	return self.runtime.toValue(self.runtime.newError(name, self.runtime.toValue(message), nil, 0))
 }
 
-// MakeNativeError creates a new object inheriting from Error with the given name, setting
+// CreateNativeError creates a error class inheriting from Error with the given name, setting
 // its message to the result of err.Error() and embedding the go error itself for later
-// consumption via _error.
-func (self Otto) MakeNativeError(name string, err error) (Value, error) {
-	nativeObj, newErr := self.runtime.newNativeError(name, err)
-	if newErr != nil {
-		return UndefinedValue(), newErr
+// consumption via _error. Returned are the function itself and a function to directly
+// construct an instance of the error.
+func (self Otto) CreateNativeError(name string) (Value, func(err error) Value) {
+	errFunc := self.runtime.getNativeErrorFunction(name)
+	return toValue_object(errFunc), func(err error) Value {
+		self := self.runtime.newErrorObject(name, self.runtime.toValue(err.Error()), err, 0)
+		self.prototype = errFunc.get("prototype")._object()
+		return toValue_object(self)
 	}
-	return self.runtime.toValue(nativeObj), nil
 }
 
 // MakeRangeError creates a new RangeError object with the given message,
