@@ -675,6 +675,8 @@ func (self Value) export() interface{} {
 			return value.value.Interface()
 		case *_goSliceObject:
 			return value.value.Interface()
+		case _goNativeValue:
+			return value.value
 		case _dateObject:
 			return value.time
 		}

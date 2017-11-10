@@ -2,6 +2,13 @@ package otto
 
 // property
 
+// Property is the exported version of property of an object
+type Property struct {
+	// TODO: add mode
+	Name  string
+	Value Value
+}
+
 type _propertyMode int
 
 const (
