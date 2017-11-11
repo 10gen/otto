@@ -90,7 +90,7 @@ type Parser interface {
 	Scan() (tkn token.Token, literal string, idx file.Idx)
 }
 
-func _newParser(filename, src string, base int, sm *sourcemap.Consumer) *_parser {
+func _newParser(filename, src string, base int, sm file.SourceMapConsumer) *_parser {
 	return &_parser{
 		chr:      ' ', // This is set so we can start scanning by skipping whitespace
 		str:      src,
@@ -129,7 +129,7 @@ func ReadSource(filename string, src interface{}) ([]byte, error) {
 	return ioutil.ReadFile(filename)
 }
 
-func ReadSourceMap(filename string, src interface{}) (*sourcemap.Consumer, error) {
+func ReadSourceMap(filename string, src interface{}) (file.SourceMapConsumer, error) {
 	if src == nil {
 		return nil, nil
 	}
@@ -149,7 +149,7 @@ func ReadSourceMap(filename string, src interface{}) (*sourcemap.Consumer, error
 			return nil, err
 		}
 		return sourcemap.Parse(filename, bfr.Bytes())
-	case *sourcemap.Consumer:
+	case file.SourceMapConsumer:
 		return src, nil
 	}
 

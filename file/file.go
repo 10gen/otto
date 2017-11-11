@@ -5,8 +5,6 @@ package file
 import (
 	"fmt"
 	"strings"
-
-	"gopkg.in/sourcemap.v1"
 )
 
 // Idx is a compact encoding of a source position within a file set.
@@ -105,7 +103,7 @@ type File struct {
 	name string
 	src  string
 	base int // This will always be 1 or greater
-	sm   *sourcemap.Consumer
+	sm   SourceMapConsumer
 }
 
 func NewFile(filename, src string, base int) *File {
@@ -116,7 +114,7 @@ func NewFile(filename, src string, base int) *File {
 	}
 }
 
-func (fl *File) WithSourceMap(sm *sourcemap.Consumer) *File {
+func (fl *File) WithSourceMap(sm SourceMapConsumer) *File {
 	fl.sm = sm
 	return fl
 }
@@ -161,4 +159,10 @@ func (fl *File) Position(idx Idx) *Position {
 	}
 
 	return position
+}
+
+// SourceMapConsumer maps generated lines and columns in a source file
+// to the original, pre-translation lines, columns, smybols, and files.
+type SourceMapConsumer interface {
+	Source(genLine, genCol int) (source, name string, line, col int, ok bool)
 }
