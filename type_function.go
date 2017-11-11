@@ -1,5 +1,7 @@
 package otto
 
+import "errors"
+
 // _constructFunction
 type _constructFunction func(*_object, []Value) Value
 
@@ -20,6 +22,16 @@ func defaultConstruct(fn *_object, argumentList []Value) Value {
 		return value
 	}
 	return this
+}
+
+// CreateNativeFunction creates a native function that will call the given call function.
+// This provides for a way to detail how the function appears to a user within JS
+// compared to passing the call in via toValue.
+func (self Otto) CreateNativeFunction(name, file string, line int, call func(FunctionCall) Value) (Value, error) {
+	if call == nil {
+		return UndefinedValue(), errors.New("call cannot be nil")
+	}
+	return toValue_object(self.runtime.newNativeFunction(name, file, line, call)), nil
 }
 
 // _nativeFunction
