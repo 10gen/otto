@@ -1,7 +1,6 @@
 package otto
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"runtime"
@@ -131,40 +130,8 @@ func (self *_runtime) cmpl_evaluate_nodeAssignExpression(node *_nodeAssignExpres
 	}
 
 	self.putValue(left.reference(), result)
-	switch nodeR := node.right.(type) {
-	case *_nodeFunctionLiteral:
-		if nodeR.name == "" {
-			var buf bytes.Buffer
-			getAssignmentLeftSideName(node.left, &buf)
-			nodeR.name = buf.String()
-		}
-	}
 
 	return result
-}
-
-func getAssignmentLeftSideName(node _nodeExpression, buf *bytes.Buffer) {
-	switch node := node.(type) {
-	case *_nodeIdentifier:
-		buf.WriteString(node.name)
-		return
-	case *_nodeLiteral:
-		if node.value.IsString() {
-			buf.WriteString(node.value.String())
-			return
-		}
-	case *_nodeBracketExpression:
-		getAssignmentLeftSideName(node.left, buf)
-		buf.WriteString(".")
-		getAssignmentLeftSideName(node.member, buf)
-		return
-	case *_nodeDotExpression:
-		getAssignmentLeftSideName(node.left, buf)
-		buf.WriteString(".")
-		buf.WriteString(node.identifier)
-		return
-	}
-	buf.WriteString("(anonymous function)")
 }
 
 func (self *_runtime) cmpl_evaluate_nodeBinaryExpression(node *_nodeBinaryExpression) Value {
