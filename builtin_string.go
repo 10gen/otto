@@ -369,6 +369,9 @@ func builtinString_split(call FunctionCall) Value {
 
 		splitLimit := limit
 		excess := false
+		if limit > len(target) {
+			limit = len(target)
+		}
 		if limit > 0 {
 			splitLimit = limit + 1
 			excess = true
