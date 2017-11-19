@@ -385,7 +385,13 @@ func sortCompare(thisObject *_object, index0, index1 uint, compare *_object) int
 		return 1
 	}
 
-	return int(toInt32(compare.call(Value{}, []Value{x, y}, false, nativeFrame)))
+	result := compare.call(Value{}, []Value{x, y}, false, nativeFrame).float64()
+	if result < 0 {
+		return -1
+	} else if result > 0 {
+		return 1
+	}
+	return 0
 }
 
 func arraySortSwap(thisObject *_object, index0, index1 uint) {
