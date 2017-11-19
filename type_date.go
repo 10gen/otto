@@ -295,5 +295,5 @@ func dateParse(date string) (epoch float64) {
 	if err != nil {
 		return math.NaN()
 	}
-	return float64(time.UnixNano()) / (1000 * 1000) // UnixMilli()
+	return float64(time.UnixNano() / 1e6)
 }

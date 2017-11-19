@@ -718,3 +718,14 @@ func Test_issue266(t *testing.T) {
 
 	})
 }
+
+func Test_issue264(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`
+			new Date("2017-07-20T09:59:17.570Z").getTime()
+        `, 1500544757570)
+
+	})
+}
