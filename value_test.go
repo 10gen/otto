@@ -210,6 +210,31 @@ func Test_sameValue(t *testing.T) {
 	})
 }
 
+func TestIsNative(t *testing.T) {
+	tt(t, func() {
+		vm := New()
+
+		ctor := func(call FunctionCall) interface{} {
+			exp, _ := call.ArgumentList[0].Export()
+			return exp
+		}
+
+		cls := vm.CreateNativeClass(
+			"Carrot",
+			ctor,
+			nil,
+			nil,
+		)
+		blessedCtor := cls.InstanceOf
+
+		is(blessedCtor("some_value").IsNative(), true)
+
+		ret, err := vm.Run(`({"field": true})`)
+		is(err, nil)
+		is(ret.IsNative(), false)
+	})
+}
+
 func TestExport(t *testing.T) {
 	tt(t, func() {
 		test, vm := test()

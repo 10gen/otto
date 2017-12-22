@@ -627,6 +627,19 @@ func strictEqualityComparison(x Value, y Value) bool {
 	return result
 }
 
+// IsNative returns whether or not this value is a Go native
+// value.
+func (self Value) IsNative() bool {
+	switch self.kind {
+	case valueObject:
+		switch self._object().value.(type) {
+		case _goNativeValue:
+			return true
+		}
+	}
+	return false
+}
+
 // Export will attempt to convert the value to a Go representation
 // and return it via an interface{} kind.
 //
