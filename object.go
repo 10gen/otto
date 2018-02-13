@@ -25,6 +25,28 @@ func newObject(runtime *_runtime, class string) *_object {
 	return self
 }
 
+func (self *_object) MemUsage(ctx *MemUsageContext) (uint64, error) {
+	if ctx.IsObjVisited(self) {
+		return 0, nil
+	}
+	ctx.VisitObj(self)
+	total := EmptySize
+	for k, v := range self.property {
+		if val, ok := v.value.(Value); ok {
+			inc, err := val.MemUsage(ctx)
+			total += inc
+			total += uint64(len(k)) // count size of property name towards total object size.
+			if err != nil {
+				return total, err
+			}
+		} else {
+			// most likely a propertyGetSet. ignore for now.
+		}
+	}
+	return total, nil
+
+}
+
 // 8.12
 
 // 8.12.1

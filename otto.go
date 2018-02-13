@@ -256,6 +256,10 @@ func New() *Otto {
 	return self
 }
 
+func (otto *Otto) MemUsage(ctx *MemUsageContext) (uint64, error) {
+	return otto.runtime.MemUsage(ctx)
+}
+
 func (otto *Otto) clone() *Otto {
 	self := &Otto{
 		runtime: otto.runtime.clone(),

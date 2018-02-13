@@ -22,6 +22,8 @@ type _stash interface {
 	newReference(string, bool, _at) _reference
 
 	clone(clone *_clone) _stash
+
+	MemUsage(ctx *MemUsageContext) (uint64, error)
 }
 
 // ==========
@@ -36,6 +38,30 @@ type _objectStash struct {
 
 func (self *_objectStash) runtime() *_runtime {
 	return self._runtime
+}
+
+func (self *_objectStash) MemUsage(ctx *MemUsageContext) (uint64, error) {
+	if ctx.IsStashVisited(self) {
+		return 0, nil
+	}
+	ctx.VisitStash(self)
+	total := uint64(0)
+	if self.object != nil {
+		inc, err := self.object.MemUsage(ctx)
+		total += inc
+		if err != nil {
+			return total, err
+		}
+	}
+	if self.outer() != nil {
+		inc, err := self.outer().MemUsage(ctx)
+		total += inc
+		if err != nil {
+			return total, err
+		}
+	}
+
+	return total, nil
 }
 
 func (runtime *_runtime) newObjectStash(object *_object, outer _stash) *_objectStash {
@@ -162,6 +188,34 @@ func (self *_dclStash) hasBinding(name string) bool {
 
 func (self *_dclStash) runtime() *_runtime {
 	return self._runtime
+}
+
+func (self *_dclStash) MemUsage(ctx *MemUsageContext) (uint64, error) {
+	if ctx.IsStashVisited(self) {
+		return 0, nil
+	}
+	ctx.VisitStash(self)
+	total := uint64(0)
+	for k, v := range self.property {
+		inc, err := v.value.MemUsage(ctx)
+		total += inc
+		total += uint64(len(k)) // count size of property name towards total object size.
+		if err != nil {
+			return total, err
+		}
+	}
+	if self._outer != nil {
+		if err := ctx.Descend(); err != nil {
+			return total, err
+		}
+		defer ctx.Ascend()
+		inc, err := self._outer.MemUsage(ctx)
+		total += inc
+		if err != nil {
+			return total, err
+		}
+	}
+	return total, nil
 }
 
 func (self *_dclStash) createBinding(name string, deletable bool, value Value) {
