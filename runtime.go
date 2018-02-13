@@ -80,6 +80,26 @@ func (self *_runtime) enterScope(scope *_scope) {
 	self.scope = scope
 }
 
+func (self *_runtime) MemUsage(ctx *MemUsageContext) (uint64, error) {
+	total := uint64(0)
+	if self.globalStash != nil && self.globalStash.object != nil {
+		inc, err := self.globalStash.object.MemUsage(ctx)
+		total += inc
+		if err != nil {
+			return total, err
+		}
+	}
+	if self.scope != nil {
+		scopeInc, err := self.scope.MemUsage(ctx)
+		total += scopeInc
+		if err != nil {
+			return total, err
+		}
+	}
+
+	return total, nil
+}
+
 func (self *_runtime) leaveScope() {
 	self.scope = self.scope.outer
 }

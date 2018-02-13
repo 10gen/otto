@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"unicode/utf16"
+	"unsafe"
 )
 
 type _valueKind int
@@ -780,8 +781,66 @@ func (self Value) evaluateBreak(labels []string) _resultKind {
 	return resultReturn
 }
 
-func (self Value) exportNative() interface{} {
+const (
+	BoolSize   = uint64(unsafe.Sizeof(true))
+	NumberSize = uint64(unsafe.Sizeof(float64(0)))
+	IntSize    = uint64(unsafe.Sizeof(float64(0)))
+	EmptySize  = uint64(unsafe.Sizeof((*_object)(nil)))
+)
 
+func (self Value) MemUsage(ctx *MemUsageContext) (uint64, error) {
+	if self.IsNative() {
+		goNativeValue := self.exportNative()
+		nativeMem, ok := ctx.NativeMemUsage(goNativeValue)
+		if ok {
+			return nativeMem, nil
+		}
+	}
+	switch self.kind {
+	case valueUndefined:
+		return EmptySize, nil
+	case valueNull:
+		return EmptySize, nil
+	case valueBoolean:
+		return BoolSize, nil
+	case valueNumber:
+		return NumberSize, nil
+	case valueString:
+		switch value := self.value.(type) {
+		case string:
+			return uint64(len(value)), nil
+		case []uint16:
+			return uint64(16 * len(value)), nil
+		}
+	case valueObject:
+		object := self._object()
+		switch object.value.(type) {
+		case *_goStructObject:
+			return EmptySize, nil
+		case *_goMapObject:
+			return EmptySize, nil
+		case *_goArrayObject:
+			return EmptySize, nil
+		case *_goSliceObject:
+			return EmptySize, nil
+		default:
+			switch val := self.value.(type) {
+			case *_object:
+				err := ctx.Descend()
+				if err != nil {
+					return 0, err
+				}
+				total, err := val.MemUsage(ctx)
+				ctx.Ascend()
+				return total, err
+			}
+		}
+	}
+
+	return 0, nil
+}
+
+func (self Value) exportNative() interface{} {
 	switch self.kind {
 	case valueUndefined:
 		return self
@@ -807,6 +866,8 @@ func (self Value) exportNative() interface{} {
 			return value.value.Interface()
 		case *_goSliceObject:
 			return value.value.Interface()
+		case _goNativeValue:
+			return value.value
 		}
 	}
 
