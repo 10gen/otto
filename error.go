@@ -99,6 +99,11 @@ type Error struct {
 	_error
 }
 
+// Name returns the name of the error's type, e.g. TypeError
+func (err Error) Name() string {
+	return err.name
+}
+
 // Error returns a description of the error
 //
 //    TypeError: 'def' is not a function
