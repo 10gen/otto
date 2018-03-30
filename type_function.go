@@ -1,6 +1,8 @@
 package otto
 
-import "errors"
+import (
+	"errors"
+)
 
 // _constructFunction
 type _constructFunction func(*_object, []Value) Value

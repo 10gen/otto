@@ -248,6 +248,11 @@ func catchPanic(function func()) (err error) {
 			case Value:
 				if vl := caught._object(); vl != nil {
 					switch vl := vl.value.(type) {
+					case _goNativeValue:
+						if innerErr, ok := vl.value.(error); ok {
+							err = innerErr
+							return
+						}
 					case _error:
 						err = &Error{vl}
 						return

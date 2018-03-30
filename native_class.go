@@ -107,6 +107,126 @@ func (self Otto) CreateNativeClass(
 	}
 }
 
+// CreateNativeErrorClass creates a native class of the given name that inherits from type Error.
+// Required is a constructor that will be called upon calling the function (with or without 'new'),
+// and getter/setter functions for the stacktrace.
+// Optional arguments are the properties that should exist on the class and function
+// respectively.
+func (self Otto) CreateNativeErrorClass(
+	className string,
+	ctor func(call FunctionCall) error,
+	initStacktrace func(err error, stacktrace string),
+	getStacktrace func(err error) string,
+	classProps []Property,
+	funcProps []Property,
+) NativeClass {
+	classProto := &_object{
+		runtime:       self.runtime,
+		class:         className,
+		objectClass:   _classObject,
+		prototype:     self.runtime.global.ErrorPrototype,
+		extensible:    true,
+		value:         nil,
+		property:      map[string]_property{},
+		propertyOrder: []string{},
+	}
+
+	for _, prop := range classProps {
+		classProto.propertyOrder = append(classProto.propertyOrder, prop.Name)
+		classProto.property[prop.Name] = _property{
+			value: prop.Value,
+			mode:  0,
+		}
+	}
+
+	classFunc := &_object{
+		runtime:     self.runtime,
+		class:       "Function",
+		objectClass: _classObject,
+		prototype:   self.runtime.global.FunctionPrototype,
+		extensible:  true,
+		value: _nativeFunctionObject{
+			name: className,
+			call: func(call FunctionCall) Value {
+				err := ctor(call)
+				stackTrace := newError(self.runtime, className, 0, err).formatWithStack()
+				initStacktrace(err, stackTrace)
+				obj := self.runtime.newObject()
+				obj.class = className
+				obj.objectClass = _classObject
+				obj.value = newError(self.runtime, className, 0, err)
+				obj.prototype = classProto
+				obj.defineProperty("message", toValue_string(err.Error()), 0111, false)
+				obj.defineProperty("name", toValue_string(className), 0111, false)
+				return toValue_object(obj)
+			},
+			construct: func(self *_object, argumentList []Value) Value {
+				obj := self.runtime.newObject()
+				obj.objectClass = _classObject
+
+				call := FunctionCall{
+					runtime:      self.runtime,
+					eval:         false,
+					This:         toValue_object(obj),
+					ArgumentList: argumentList,
+					Otto:         self.runtime.otto,
+				}
+				err := ctor(call)
+				stackTrace := newError(self.runtime, className, 0, err).formatWithStack()
+				initStacktrace(err, stackTrace)
+
+				obj.value = _goNativeValue{err}
+
+				obj.prototype = classProto
+				obj.defineProperty("message", toValue_string(err.Error()), 0111, false)
+				obj.defineProperty("name", toValue_string(className), 0111, false)
+				return toValue_object(obj)
+			},
+		},
+		property: map[string]_property{
+			"prototype": _property{
+				mode: 0,
+				value: Value{
+					kind:  valueObject,
+					value: classProto,
+				},
+			},
+		},
+		propertyOrder: []string{},
+	}
+	for _, prop := range funcProps {
+		classFunc.propertyOrder = append(classFunc.propertyOrder, prop.Name)
+		classFunc.property[prop.Name] = _property{
+			value: prop.Value,
+			mode:  0,
+		}
+	}
+
+	blessedInstanceOf := func(blessedValue interface{}) Value {
+		obj := self.runtime.newObject()
+		obj.class = className
+		obj.objectClass = _classObject
+		obj.value = _goNativeValue{blessedValue}
+		obj.prototype = classProto
+		obj.defineProperty("name", toValue_string(className), 0111, false)
+
+		if blessedValueErr, ok := blessedValue.(error); ok {
+			stackTrace := getStacktrace(blessedValueErr)
+			if len(stackTrace) == 0 {
+				stackTrace = newError(self.runtime, className, 0, blessedValueErr, blessedValueErr.Error()).formatWithStack()
+			}
+			obj.defineProperty("message", toValue_string(blessedValueErr.Error()), 0111, false)
+			initStacktrace(blessedValueErr, stackTrace)
+		}
+
+		return toValue_object(obj)
+	}
+	return NativeClass{
+		Function:   toValue_object(classFunc),
+		InstanceOf: blessedInstanceOf,
+	}
+}
+
 // _goNativeValue is a wrapper type to signify that this is
 // an instance of a native class.
 type _goNativeValue struct {
