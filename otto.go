@@ -225,6 +225,7 @@ Here is some more discussion of the issue:
 package otto
 
 import (
+	goctx "context"
 	"fmt"
 	"strings"
 
@@ -254,6 +255,13 @@ func New() *Otto {
 	})
 
 	return self
+}
+
+// NewWithContext returns an Otto vm with the given root context
+func NewWithContext(ctx goctx.Context) *Otto {
+	vm := New()
+	vm.runtime.ctx = ctx
+	return vm
 }
 
 func (otto *Otto) MemUsage(ctx *MemUsageContext) (uint64, error) {
@@ -303,12 +311,7 @@ func (self Otto) Run(src interface{}) (Value, error) {
 	return value, err
 }
 
-// Eval will do the same thing as Run, except without leaving the current scope.
-//
-// By staying in the same scope, the code evaluated has access to everything
-// already defined in the current stack frame. This is most useful in, for
-// example, a debugger call.
-func (self Otto) Eval(src interface{}) (Value, error) {
+func (self Otto) EvalWithContext(ctx goctx.Context, src interface{}) (Value, error) {
 	if self.runtime.scope == nil {
 		self.runtime.enterGlobalScope()
 		defer self.runtime.leaveScope()
@@ -319,6 +322,21 @@ func (self Otto) Eval(src interface{}) (Value, error) {
 		value = Value{}
 	}
 	return value, err
+}
+
+// Eval will do the same thing as Run, except without leaving the current scope.
+//
+// By staying in the same scope, the code evaluated has access to everything
+// already defined in the current stack frame. This is most useful in, for
+// example, a debugger call.
+func (self Otto) Eval(src interface{}) (Value, error) {
+	return self.EvalWithContext(goctx.Background(), src)
+}
+
+// GoContext returns the current active go context.
+// If the runtime has a scope active, it will return the context at that scope.
+func (self Otto) GoContext() goctx.Context {
+	return self.runtime.context()
 }
 
 // Get the value of the top-level binding of the given name.
@@ -552,6 +570,10 @@ func (self Otto) ContextSkip(limit int, skipNative bool) (ctx Context) {
 //      value, _ := vm.Call(`[ 1, 2, 3, undefined, 4 ].concat`, nil, 5, 6, 7, "abc")
 //
 func (self Otto) Call(source string, this interface{}, argumentList ...interface{}) (Value, error) {
+	return self.CallWithContext(goctx.Background(), source, this, argumentList)
+}
+
+func (self Otto) CallWithContext(ctx goctx.Context, source string, this interface{}, argumentList ...interface{}) (Value, error) {
 
 	thisValue := Value{}
 

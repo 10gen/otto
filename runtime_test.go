@@ -1,9 +1,68 @@
 package otto
 
 import (
+	"context"
 	"math"
 	"testing"
 )
+
+func TestContext(t *testing.T) {
+	key := "key"
+	vm := NewWithContext(context.WithValue(context.Background(), key, 100))
+
+	incrementer := func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, key, ctx.Value(key).(int)+1)
+	}
+	vm.Set("check", func(fc FunctionCall) Value {
+		val, _ := ToValue(incrementer(fc.Context()).Value(key))
+		return val
+	})
+	vm.Set("nativecall", func(fc FunctionCall) Value {
+		val, _ := fc.Argument(0).CallWithContext(incrementer(fc.Context()), NullValue())
+		return val
+	})
+	_, err := vm.Eval(`
+		exports = function foo(){
+			return check()
+		}
+	`)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	fooFunc, err := vm.Get("exports")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if !fooFunc.IsFunction() {
+		t.Fatalf("foo should be a function, but got %v", fooFunc)
+	}
+
+	result, err := fooFunc.CallWithContext(context.WithValue(context.Background(), key, 10), NullValue())
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV, err := result.Export()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	if resultV != 11 {
+		t.Fatalf("expected 11 but got %v", resultV)
+	}
+
+	result, err = fooFunc.Call(NullValue())
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV, err = result.Export()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	if resultV != 101 {
+		t.Fatalf("expected 101 but got %v", resultV)
+	}
+}
 
 // FIXME terst, Review tests
 

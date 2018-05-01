@@ -1,6 +1,7 @@
 package otto
 
 import (
+	"context"
 	"errors"
 )
 
@@ -187,6 +188,10 @@ func (self *_object) isCall() bool {
 }
 
 func (self *_object) call(this Value, argumentList []Value, eval bool, frame _frame) Value {
+	return self.callWithContext(self.runtime.context(), this, argumentList, eval, frame)
+}
+
+func (self *_object) callWithContext(ctx context.Context, this Value, argumentList []Value, eval bool, frame _frame) Value {
 	switch fn := self.value.(type) {
 
 	case _nativeFunctionObject:
@@ -198,7 +203,7 @@ func (self *_object) call(this Value, argumentList []Value, eval bool, frame _fr
 		// Enter a scope, name from the native object...
 		rt := self.runtime
 		if rt.scope != nil && !eval {
-			rt.enterFunctionScope(rt.scope.lexical, this)
+			rt.enterFunctionScope(rt.scope.lexical, this, ctx)
 			rt.scope.frame = _frame{
 				native:     true,
 				nativeFile: fn.file,
@@ -213,9 +218,9 @@ func (self *_object) call(this Value, argumentList []Value, eval bool, frame _fr
 		}
 
 		return fn.call(FunctionCall{
-			runtime: self.runtime,
-			eval:    eval,
-
+			runtime:      self.runtime,
+			eval:         eval,
+			ctx:          ctx,
 			This:         this,
 			ArgumentList: argumentList,
 			Otto:         self.runtime.otto,
@@ -228,7 +233,7 @@ func (self *_object) call(this Value, argumentList []Value, eval bool, frame _fr
 
 	case _nodeFunctionObject:
 		rt := self.runtime
-		stash := rt.enterFunctionScope(fn.stash, this)
+		stash := rt.enterFunctionScope(fn.stash, this, ctx)
 		rt.scope.frame = _frame{
 			callee: fn.node.name,
 			file:   fn.node.file,
@@ -303,6 +308,7 @@ type FunctionCall struct {
 	runtime     *_runtime
 	_thisObject *_object
 	eval        bool // This call is a direct call to eval
+	ctx         context.Context
 
 	This         Value
 	ArgumentList []Value
@@ -318,6 +324,10 @@ func (self FunctionCall) Argument(index int) Value {
 
 func (self FunctionCall) getArgument(index int) (Value, bool) {
 	return getValueOfArrayIndex(self.ArgumentList, index)
+}
+
+func (self FunctionCall) Context() context.Context {
+	return self.ctx
 }
 
 func (self FunctionCall) slice(index int) []Value {

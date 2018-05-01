@@ -1,6 +1,7 @@
 package otto
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"reflect"
@@ -116,6 +117,29 @@ func (value Value) Call(this Value, argumentList ...interface{}) (Value, error) 
 		value = Value{}
 	}
 	return result, err
+}
+
+func (value Value) CallWithContext(ctx context.Context, this Value, argumentList ...interface{}) (Value, error) {
+	result := Value{}
+	err := catchPanic(func() {
+		// FIXME
+		result = value.callWithContext(ctx, nil, this, argumentList...)
+	})
+	if !value.safe() {
+		value = Value{}
+	}
+	return result, err
+}
+
+func (value Value) callWithContext(ctx context.Context, rt *_runtime, this Value, argumentList ...interface{}) Value {
+	switch function := value.value.(type) {
+	case *_object:
+		return function.callWithContext(ctx, this, function.runtime.toValueArray(argumentList...), false, nativeFrame)
+	}
+	if rt == nil {
+		panic("FIXME TypeError")
+	}
+	panic(rt.panicTypeError())
 }
 
 func (value Value) call(rt *_runtime, this Value, argumentList ...interface{}) Value {

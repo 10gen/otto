@@ -1,5 +1,9 @@
 package otto
 
+import (
+	"context"
+)
+
 // _scope:
 // entryFile
 // entryIdx
@@ -22,6 +26,7 @@ type _scope struct {
 	eval     bool // Replace this with kind?
 	outer    *_scope
 	depth    int
+	context  context.Context
 
 	frame _frame
 }
@@ -61,10 +66,11 @@ func (self *_scope) MemUsage(ctx *MemUsageContext) (uint64, error) {
 	return total, nil
 }
 
-func newScope(lexical _stash, variable _stash, this *_object) *_scope {
+func newScope(lexical _stash, variable _stash, this *_object, ctx context.Context) *_scope {
 	return &_scope{
 		lexical:  lexical,
 		variable: variable,
 		this:     this,
+		context:  ctx,
 	}
 }
