@@ -313,7 +313,7 @@ func (self Otto) Run(src interface{}) (Value, error) {
 
 func (self Otto) EvalWithContext(ctx goctx.Context, src interface{}) (Value, error) {
 	if self.runtime.scope == nil {
-		self.runtime.enterGlobalScope()
+		self.runtime.enterGlobalScopeWithContext(ctx)
 		defer self.runtime.leaveScope()
 	}
 
@@ -330,7 +330,7 @@ func (self Otto) EvalWithContext(ctx goctx.Context, src interface{}) (Value, err
 // already defined in the current stack frame. This is most useful in, for
 // example, a debugger call.
 func (self Otto) Eval(src interface{}) (Value, error) {
-	return self.EvalWithContext(goctx.Background(), src)
+	return self.EvalWithContext(self.runtime.context(), src)
 }
 
 // GoContext returns the current active go context.
@@ -584,7 +584,7 @@ func (self Otto) CallWithContext(ctx goctx.Context, source string, this interfac
 	}
 
 	// FIXME enterGlobalScope
-	self.runtime.enterGlobalScope()
+	self.runtime.enterGlobalScopeWithContext(ctx)
 	defer func() {
 		self.runtime.leaveScope()
 	}()

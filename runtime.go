@@ -110,6 +110,10 @@ func (self *_runtime) enterGlobalScope() {
 	self.enterScope(newScope(self.globalStash, self.globalStash, self.globalObject, self.ctx))
 }
 
+func (self *_runtime) enterGlobalScopeWithContext(ctx context.Context) {
+	self.enterScope(newScope(self.globalStash, self.globalStash, self.globalObject, ctx))
+}
+
 // return the context for the runtime's current scope
 func (self *_runtime) context() context.Context {
 	if self.scope != nil {

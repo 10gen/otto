@@ -108,7 +108,7 @@ func (value Value) isCallable() bool {
 //		3. An (uncaught) exception is thrown
 //
 func (value Value) Call(this Value, argumentList ...interface{}) (Value, error) {
-	result := Value{}
+	var result Value
 	err := catchPanic(func() {
 		// FIXME
 		result = value.call(nil, this, argumentList...)
@@ -120,7 +120,7 @@ func (value Value) Call(this Value, argumentList ...interface{}) (Value, error) 
 }
 
 func (value Value) CallWithContext(ctx context.Context, this Value, argumentList ...interface{}) (Value, error) {
-	result := Value{}
+	var result Value
 	err := catchPanic(func() {
 		// FIXME
 		result = value.callWithContext(ctx, nil, this, argumentList...)

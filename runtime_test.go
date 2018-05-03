@@ -62,6 +62,32 @@ func TestContext(t *testing.T) {
 	if resultV != 101 {
 		t.Fatalf("expected 101 but got %v", resultV)
 	}
+
+	result, err = vm.EvalWithContext(context.WithValue(context.Background(), key, 10), "exports()")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV, err = result.Export()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	if resultV != 11 {
+		t.Fatalf("expected 11 but got %v", resultV)
+	}
+
+	result, err = vm.Eval("exports()")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV, err = result.Export()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	if resultV != 101 {
+		t.Fatalf("expected 101 but got %v", resultV)
+	}
 }
 
 // FIXME terst, Review tests
