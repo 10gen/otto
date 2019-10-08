@@ -3,7 +3,7 @@
 package parser
 
 import (
-	Dbg "github.com/robertkrimen/otto/dbg"
+	Dbg "github.com/10gen/otto/dbg"
 )
 
 var dbg, dbgf = Dbg.New()
