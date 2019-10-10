@@ -6,6 +6,13 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/10gen/otto/parser"
+	otto_regexp "github.com/10gen/otto/regexp"
+	"github.com/10gen/otto/regexp/pcre"
+	"github.com/10gen/otto/regexp/re2"
+
+	"github.com/dlclark/regexp2"
 )
 
 // String
@@ -137,7 +144,10 @@ func builtinString_match(call FunctionCall) Value {
 	}
 
 	{
-		result := matcher.regExpValue().regularExpression.FindAllStringIndex(target, -1)
+		result, err := matcher.regExpValue().regularExpression.FindAllStringIndex(target, -1)
+		if err != nil {
+			return Value{} // !match
+		}
 		matchCount := len(result)
 		if result == nil {
 			matcher.put("lastIndex", toValue_int(0), true)
@@ -195,7 +205,7 @@ func builtinString_replace(call FunctionCall) Value {
 	searchObject := searchValue._object()
 
 	// TODO If a capture is -1?
-	var search *regexp.Regexp
+	var search otto_regexp.Regexp
 	global := false
 	find := 1
 	if searchValue.IsObject() && searchObject.class == "RegExp" {
@@ -205,11 +215,18 @@ func builtinString_replace(call FunctionCall) Value {
 			find = -1
 		}
 	} else {
-		search = regexp.MustCompile(regexp.QuoteMeta(searchValue.string()))
+		pattern, patternErr := parser.TransformRegExp(regexp.QuoteMeta(searchValue.string()))
+		if pattern != "" && patternErr != nil {
+			// PCRE
+			search, _ = pcre.New(pattern, regexp2.ECMAScript)
+		} else if pattern != "" && patternErr == nil {
+			// re2
+			search, _ = re2.New(pattern)
+		}
 	}
 
-	found := search.FindAllSubmatchIndex(target, find)
-	if found == nil {
+	found, foundErr := search.FindAllSubmatchIndex(target, find)
+	if foundErr != nil || found == nil {
 		return toValue_string(string(target)) // !match
 	}
 
@@ -270,7 +287,10 @@ func builtinString_search(call FunctionCall) Value {
 	if !searchValue.IsObject() || search.class != "RegExp" {
 		search = call.runtime.newRegExp(searchValue, Value{})
 	}
-	result := search.regExpValue().regularExpression.FindStringIndex(target)
+	result, resultErr := search.regExpValue().regularExpression.FindStringIndex(target)
+	if resultErr != nil {
+		return toValue_int(-1)
+	}
 	if result == nil {
 		return toValue_int(-1)
 	}
@@ -311,7 +331,10 @@ func builtinString_split(call FunctionCall) Value {
 		targetLength := len(target)
 		search := separatorValue._object().regExpValue().regularExpression
 		valueArray := []Value{}
-		result := search.FindAllStringSubmatchIndex(target, -1)
+		result, resultErr := search.FindAllStringSubmatchIndex(target, -1)
+		if resultErr != nil {
+			result = [][]int{}
+		}
 		lastIndex := 0
 		found := 0
 

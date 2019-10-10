@@ -2,14 +2,18 @@ package otto
 
 import (
 	"fmt"
-	"regexp"
 	"unicode/utf8"
 
 	"github.com/10gen/otto/parser"
+	"github.com/10gen/otto/regexp"
+	"github.com/10gen/otto/regexp/pcre"
+	"github.com/10gen/otto/regexp/re2"
+
+	"github.com/dlclark/regexp2"
 )
 
 type _regExpObject struct {
-	regularExpression *regexp.Regexp
+	regularExpression regexp.Regexp
 	global            bool
 	ignoreCase        bool
 	multiline         bool
@@ -25,6 +29,7 @@ func (runtime *_runtime) newRegExpObject(pattern string, flags string) *_object 
 	ignoreCase := false
 	multiline := false
 	re2flags := ""
+	var pcreFlags regexp2.RegexOptions = regexp2.ECMAScript
 
 	// TODO Maybe clean up the panicking here... TypeError, SyntaxError, ?
 
@@ -41,26 +46,34 @@ func (runtime *_runtime) newRegExpObject(pattern string, flags string) *_object 
 			}
 			multiline = true
 			re2flags += "m"
+			pcreFlags |= regexp2.Multiline
 		case 'i':
 			if ignoreCase {
 				panic(runtime.panicSyntaxError("newRegExpObject: %s %s", pattern, flags))
 			}
 			ignoreCase = true
 			re2flags += "i"
+			pcreFlags |= regexp2.IgnoreCase
 		}
 	}
 
-	re2pattern, err := parser.TransformRegExp(pattern)
-	if err != nil {
-		panic(runtime.panicTypeError("Invalid regular expression: %s", err.Error()))
-	}
-	if len(re2flags) > 0 {
-		re2pattern = fmt.Sprintf("(?%s:%s)", re2flags, re2pattern)
+	transformedPattern, transformErr := parser.TransformRegExp(pattern)
+	if transformedPattern == "" && transformErr != nil {
+		panic(runtime.panicTypeError("Invalid regular expression: %s", transformErr.Error()))
 	}
 
-	regularExpression, err := regexp.Compile(re2pattern)
-	if err != nil {
-		panic(runtime.panicSyntaxError("Invalid regular expression: %s", err.Error()[22:]))
+	var regularExpression regexp.Regexp
+	var regexpErr error
+	if transformErr != nil {
+		regularExpression, regexpErr = pcre.New(transformedPattern, pcreFlags)
+	} else {
+		if len(re2flags) > 0 {
+			transformedPattern = fmt.Sprintf("(?%s:%s)", re2flags, transformedPattern)
+		}
+		regularExpression, regexpErr = re2.New(transformedPattern)
+	}
+	if regexpErr != nil {
+		panic(runtime.panicSyntaxError("Invalid regular expression: %s", regexpErr.Error()[22:]))
 	}
 
 	self.value = _regExpObject{
@@ -90,15 +103,16 @@ func execRegExp(this *_object, target string) (match bool, result []int) {
 	}
 	lastIndex := this.get("lastIndex").number().int64
 	index := lastIndex
+	var resultErr error
 	global := this.get("global").bool()
 	if !global {
 		index = 0
 	}
 	if 0 > index || index > int64(len(target)) {
 	} else {
-		result = this.regExpValue().regularExpression.FindStringSubmatchIndex(target[index:])
+		result, resultErr = this.regExpValue().regularExpression.FindStringSubmatchIndex(target[index:])
 	}
-	if result == nil {
+	if resultErr != nil || result == nil {
 		//this.defineProperty("lastIndex", toValue_(0), 0111, true)
 		this.put("lastIndex", toValue_int(0), true)
 		return // !match

@@ -146,8 +146,9 @@ func TestString_match(t *testing.T) {
 		test(`
             abc = /abc/g
             "abc___abc_abc__abc__abc".match(abc)
-        `, "abc,abc,abc,abc,abc")
+				`, "abc,abc,abc,abc,abc")
 		test(`abc.lastIndex`, 23)
+		test(`"abcdefg_abcdegf_abcedfg_abcfdeg".match(/abc(?=defg)/)`, "abc")
 	})
 }
 
@@ -191,7 +192,8 @@ func TestString_replace(t *testing.T) {
             var abc = 'She sells seashells by the seashore.';
             var def = /sh/;
             [ abc.replace(def, "$'" + 'sch') ];
-        `, "She sells seaells by the seashore.schells by the seashore.")
+				`, "She sells seaells by the seashore.schells by the seashore.")
+		test(`"abcdefg".replace(/abc(?=defg)/, "hij")`, "hijdefg")
 	})
 }
 
@@ -214,6 +216,9 @@ func TestString_search(t *testing.T) {
 		test(`"abc".search(/def/)`, -1)
 		test(`"abc".search(/c$/)`, 2)
 		test(`"abc".search(/$/)`, 3)
+		test(`"abc".search(/a(?=b)/)`, 0)
+		test(`"abc".search(/b(?=c)/)`, 1)
+		test(`"abc".search(/c(?=d)/)`, -1)
 	})
 }
 

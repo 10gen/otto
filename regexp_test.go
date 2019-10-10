@@ -9,6 +9,8 @@ func TestRegExp(t *testing.T) {
 	tt(t, func() {
 		test, _ := test()
 
+		test(`/x(?=y)/.toString()`, "/x(?=y)/")
+
 		test(`
             [
                 /abc/.toString(),
