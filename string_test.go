@@ -149,6 +149,9 @@ func TestString_match(t *testing.T) {
 				`, "abc,abc,abc,abc,abc")
 		test(`abc.lastIndex`, 23)
 		test(`"abcdefg_abcdegf_abcedfg_abcfdeg".match(/abc(?=defg)/)`, "abc")
+		test(`"abcdefg_abcdegf_abddefg_abcfdeg_abcdefg".match(/ab(c|d)(?=defg)/g)`, "abc,abd,abc")
+		test(`"Abcdefg_abcdEgf_ABddefg_abCfDeg_abcdEFg".match(/ab(c|d)(?=defg)/gi)`, "Abc,ABd,abc")
+		test(`"abcdefg\nhijklmn".match(/h(?=ij)/m)`, "h")
 	})
 }
 
