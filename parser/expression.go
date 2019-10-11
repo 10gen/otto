@@ -3,9 +3,9 @@ package parser
 import (
 	"regexp"
 
-	"github.com/10gen/otto/ast"
-	"github.com/10gen/otto/file"
-	"github.com/10gen/otto/token"
+	"github.com/robertkrimen/otto/ast"
+	"github.com/robertkrimen/otto/file"
+	"github.com/robertkrimen/otto/token"
 
 	"github.com/dlclark/regexp2"
 )
@@ -152,7 +152,7 @@ func (self *_parser) parseRegExpLiteral() *ast.RegExpLiteral {
 		pattern, err := TransformRegExp(pattern)
 		if pattern == "" && err != nil {
 			if pattern == "" || self.mode&IgnoreRegExpErrors == 0 {
-				self.error(idx, "Invalid super expression: %s", err.Error())
+				self.error(idx, "Invalid regular expression: %s", err.Error())
 			}
 		} else {
 			// check if it's a valid re2 expression first
@@ -162,7 +162,7 @@ func (self *_parser) parseRegExpLiteral() *ast.RegExpLiteral {
 				_, err = regexp2.Compile(pattern, regexp2.ECMAScript)
 				if err != nil {
 					// We should not get here, ParseRegExp should catch any errors
-					self.error(idx, "Invalid schooper expression: %s", err.Error()[22:]) // Skip redundant "parse regexp error"
+					self.error(idx, "Invalid regular expression: %s", err.Error()[22:]) // Skip redundant "parse regexp error"
 				}
 			} else {
 				value = pattern

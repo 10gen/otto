@@ -7,10 +7,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/10gen/otto/parser"
-	otto_regexp "github.com/10gen/otto/regexp"
-	"github.com/10gen/otto/regexp/pcre"
-	"github.com/10gen/otto/regexp/re2"
+	"github.com/robertkrimen/otto/parser"
+	otto_regexp "github.com/robertkrimen/otto/regexp"
+	"github.com/robertkrimen/otto/regexp/pcre"
+	"github.com/robertkrimen/otto/regexp/re2"
 
 	"github.com/dlclark/regexp2"
 )

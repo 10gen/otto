@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/10gen/otto/ast"
-	"github.com/10gen/otto/token"
+	"github.com/robertkrimen/otto/ast"
+	"github.com/robertkrimen/otto/token"
 )
 
 func (self *_parser) parseBlockStatement() *ast.BlockStatement {

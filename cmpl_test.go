@@ -3,7 +3,7 @@ package otto
 import (
 	"testing"
 
-	"github.com/10gen/otto/parser"
+	"github.com/robertkrimen/otto/parser"
 )
 
 func Test_cmpl(t *testing.T) {

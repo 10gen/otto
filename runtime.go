@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/10gen/otto/ast"
-	"github.com/10gen/otto/parser"
+	"github.com/robertkrimen/otto/ast"
+	"github.com/robertkrimen/otto/parser"
 )
 
 type _global struct {
