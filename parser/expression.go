@@ -162,7 +162,7 @@ func (self *_parser) parseRegExpLiteral() *ast.RegExpLiteral {
 				_, err = regexp2.Compile(pattern, regexp2.ECMAScript)
 				if err != nil {
 					// We should not get here, ParseRegExp should catch any errors
-					self.error(idx, "Invalid regular expression: %s", err.Error()[22:]) // Skip redundant "parse regexp error"
+					self.error(idx, "Invalid regular expression: %s", err.Error())
 				}
 			} else {
 				value = pattern

@@ -73,7 +73,7 @@ func (runtime *_runtime) newRegExpObject(pattern string, flags string) *_object 
 		regularExpression, regexpErr = re2.New(transformedPattern)
 	}
 	if regexpErr != nil {
-		panic(runtime.panicSyntaxError("Invalid regular expression: %s", regexpErr.Error()[22:]))
+		panic(runtime.panicSyntaxError("Invalid regular expression: %s", regexpErr.Error()))
 	}
 
 	self.value = _regExpObject{
