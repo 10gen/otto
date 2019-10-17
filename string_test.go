@@ -268,7 +268,9 @@ func TestString_split(t *testing.T) {
             var def = abc.split(new RegExp);
 
             [ def.constructor === Array, abc.length, def.length, def.join('') ];
-        `, "true,19,19,one-1 two-2 three-3")
+				`, "true,19,19,one-1 two-2 three-3")
+		test(`"a++b+-c".split(/([+-])\1/).join(" $$ ")`, "a $$ + $$ b+-c")
+		test(`"Fubpxjnir Synfu 9.0  e115".replace(/([a-zA-Z]|\s)+/, '')`, "9.0  e115")
 	})
 }
 
