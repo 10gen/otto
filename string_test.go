@@ -219,6 +219,8 @@ func TestString_search(t *testing.T) {
 		test(`"abc".search(/def/)`, -1)
 		test(`"abc".search(/c$/)`, 2)
 		test(`"abc".search(/$/)`, 3)
+		test(`"abc".search("bc")`, 1)
+		test(`"abc".search("d")`, -1)
 		test(`"abc".search(/a(?=b)/)`, 0)
 		test(`"abc".search(/b(?=c)/)`, 1)
 		test(`"abc".search(/c(?=d)/)`, -1)

@@ -7,12 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/robertkrimen/otto/parser"
 	otto_regexp "github.com/robertkrimen/otto/regexp"
-	"github.com/robertkrimen/otto/regexp/pcre"
-	"github.com/robertkrimen/otto/regexp/re2"
-
-	"github.com/dlclark/regexp2"
 )
 
 // String
@@ -208,21 +203,14 @@ func builtinString_replace(call FunctionCall) Value {
 	var search otto_regexp.Regexp
 	global := false
 	find := 1
-	if searchValue.IsObject() && searchObject.class == "RegExp" {
-		regExp := searchObject.regExpValue()
-		search = regExp.regularExpression
-		if regExp.global {
-			find = -1
-		}
-	} else {
-		pattern, patternErr := parser.TransformRegExp(regexp.QuoteMeta(searchValue.string()))
-		if pattern != "" && patternErr != nil {
-			// PCRE
-			search, _ = pcre.New(pattern, regexp2.ECMAScript)
-		} else if pattern != "" && patternErr == nil {
-			// re2
-			search, _ = re2.New(pattern)
-		}
+	if !searchValue.IsObject() || searchObject.class != "RegExp" {
+		searchObject = call.runtime.newRegExpObject(regexp.QuoteMeta(searchValue.string()), "")
+	}
+
+	regExp := searchObject.regExpValue()
+	search = regExp.regularExpression
+	if regExp.global {
+		find = -1
 	}
 
 	found, foundErr := search.FindAllSubmatchIndex(target, find)
