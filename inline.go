@@ -389,6 +389,29 @@ func _newContext(runtime *_runtime) {
 				call: builtinObject_getPrototypeOf,
 			},
 		}
+		setPrototypeOf_function := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 2,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "setPrototypeOf",
+				call: builtinObject_setPrototypeOf,
+			},
+		}
 		getOwnPropertyDescriptor_function := &_object{
 			runtime:     runtime,
 			class:       "Function",
@@ -696,6 +719,13 @@ func _newContext(runtime *_runtime) {
 					value: Value{
 						kind:  valueObject,
 						value: getPrototypeOf_function,
+					},
+				},
+				"setPrototypeOf": _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: setPrototypeOf_function,
 					},
 				},
 				"getOwnPropertyDescriptor": _property{

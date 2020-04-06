@@ -99,6 +99,23 @@ func builtinObject_getPrototypeOf(call FunctionCall) Value {
 	return toValue_object(object.prototype)
 }
 
+func builtinObject_setPrototypeOf(call FunctionCall) Value {
+	objectValue := call.Argument(0)
+	object := objectValue._object()
+	if object == nil {
+		panic(call.runtime.panicTypeError())
+	}
+
+	prototypeValue := call.Argument(1)
+	if !prototypeValue.IsNull() && !prototypeValue.IsObject() {
+		panic(call.runtime.panicTypeError("Object prototype may only be an Object or null"))
+	}
+
+	object.prototype = prototypeValue._object()
+
+	return toValue_object(object)
+}
+
 func builtinObject_getOwnPropertyDescriptor(call FunctionCall) Value {
 	objectValue := call.Argument(0)
 	object := objectValue._object()

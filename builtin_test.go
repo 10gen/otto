@@ -134,3 +134,49 @@ func TestGlobal_unescape(t *testing.T) {
         `, "abc,==,abc=%+32,世界")
 	})
 }
+
+func TestObject_setPrototypeOf(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`
+		    var Animal = {};
+		    Animal.isAnimal = true;
+
+		    var Mammal = Object.create(Animal);
+		    Mammal.isMammal = true;
+
+		    var dog = Object.create(Animal);
+		    var o = Object.setPrototypeOf(dog, Mammal);
+
+		    [
+		        "self_" + JSON.stringify(dog.isAnimal), // "self_true"
+		        "self_" + JSON.stringify(dog.isMammal), // "self_true"
+		        "o_" + JSON.stringify(o.isAnimal), // "o_true"
+		        "o_" + JSON.stringify(o.isMammal), // "o_true"
+		    ];
+		`, "self_true,self_true,o_true,o_true")
+
+		test(`
+            function Foo(){};
+            Object.setPrototypeOf(Foo, null);
+
+            [
+                Object.getPrototypeOf(Foo) === null,
+            ];
+        `, "true")
+
+		test(`
+            function Foo(){};
+            var err;
+            try {
+                Object.setPrototypeOf(Foo, 5);
+            } catch(e) {
+                err = e.message;
+            }
+            [
+                err,
+            ];
+        `, "Object prototype may only be an Object or null")
+	})
+}
