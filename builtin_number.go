@@ -40,6 +40,11 @@ func builtinNumber_toString(call FunctionCall) Value {
 	return toValue_string(numberToStringRadix(value, radix))
 }
 
+func builtinNumber_isInteger(call FunctionCall) Value {
+	isNumber := call.Argument(0).IsNumber()
+	return toValue_bool(isNumber)
+}
+
 func builtinNumber_valueOf(call FunctionCall) Value {
 	return call.thisClassObject("Number").primitiveValue()
 }

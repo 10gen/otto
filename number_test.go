@@ -67,6 +67,23 @@ func TestNumber_toString(t *testing.T) {
 	})
 }
 
+func TestNumber_isInteger(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`
+            Number.isInteger(10);
+		`, true)
+		test(`
+            Number.isInteger("10");
+        `, false)
+		test(`
+            Number.isInteger("number");
+        `, false)
+
+	})
+}
+
 func TestNumber_toFixed(t *testing.T) {
 	tt(t, func() {
 		test, _ := test()

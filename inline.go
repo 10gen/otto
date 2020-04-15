@@ -2717,6 +2717,29 @@ func _newContext(runtime *_runtime) {
 				"toLocaleString",
 			},
 		}
+		isInteger_function := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 2,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "isInteger",
+				call: builtinNumber_isInteger,
+			},
+		}
 		runtime.global.Number = &_object{
 			runtime:     runtime,
 			class:       "Function",
@@ -2741,6 +2764,13 @@ func _newContext(runtime *_runtime) {
 					value: Value{
 						kind:  valueObject,
 						value: runtime.global.NumberPrototype,
+					},
+				},
+				"isInteger": _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: isInteger_function,
 					},
 				},
 				"MAX_VALUE": _property{
@@ -2782,6 +2812,7 @@ func _newContext(runtime *_runtime) {
 			propertyOrder: []string{
 				"length",
 				"prototype",
+				"isInteger",
 				"MAX_VALUE",
 				"MIN_VALUE",
 				"NaN",
