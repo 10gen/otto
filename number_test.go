@@ -80,6 +80,9 @@ func TestNumber_isInteger(t *testing.T) {
 		test(`
             Number.isInteger("number");
         `, false)
+		test(`
+            Number.isInteger(NaN);
+        `, false)
 
 	})
 }
