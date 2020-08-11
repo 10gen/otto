@@ -42,6 +42,9 @@ func builtinNumber_toString(call FunctionCall) Value {
 
 func builtinNumber_isInteger(call FunctionCall) Value {
 	isNumber := call.Argument(0).IsNumber()
+	if isNumber && call.Argument(0).IsNaN() {
+		return toValue_bool(false)
+	}
 	return toValue_bool(isNumber)
 }
 

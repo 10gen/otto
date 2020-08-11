@@ -184,9 +184,6 @@ func (value Value) IsBoolean() bool {
 
 // IsNumber will return true if value is a number (primitive).
 func (value Value) IsNumber() bool {
-	if value.IsNaN() {
-		return false
-	}
 	return value.kind == valueNumber
 }
 
