@@ -21,6 +21,7 @@ import (
 type _global struct {
 	Object         *_object // Object( ... ), new Object( ... ) - 1 (length)
 	Function       *_object // Function( ... ), new Function( ... ) - 1
+	Symbol         *_object // Symbol( ... )
 	Array          *_object // Array( ... ), new Array( ... ) - 1
 	String         *_object // String( ... ), new String( ... ) - 1
 	Boolean        *_object // Boolean( ... ), new Boolean( ... ) - 1
@@ -39,6 +40,7 @@ type _global struct {
 
 	ObjectPrototype         *_object // Object.prototype
 	FunctionPrototype       *_object // Function.prototype
+	SymbolPrototype         *_object // Symbol.prototype
 	ArrayPrototype          *_object // Array.prototype
 	StringPrototype         *_object // String.prototype
 	BooleanPrototype        *_object // Boolean.prototype
@@ -69,6 +71,7 @@ type _runtime struct {
 	labels       []string // FIXME
 	lck          sync.Mutex
 	ticks        uint64
+	symbols      map[interface{}]Value
 }
 
 func (self *_runtime) enterScope(scope *_scope) {

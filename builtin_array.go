@@ -611,6 +611,79 @@ func builtinArray_forEach(call FunctionCall) Value {
 	panic(call.runtime.panicTypeError())
 }
 
+func builtinArray_iterator(call FunctionCall) Value {
+	arrayItems := []Value{}
+	this := call.thisObject()
+	this.enumerate(false, func(name string) bool {
+		arrayItems = append(arrayItems, this.get(name))
+		return true
+	})
+
+	next_function := &_object{
+		runtime:     call.runtime,
+		class:       "Function",
+		objectClass: _classObject,
+		prototype:   call.runtime.global.FunctionPrototype,
+		extensible:  true,
+		property: map[string]_property{
+			"length": _property{
+				mode: 0,
+				value: Value{
+					kind:  valueNumber,
+					value: 0,
+				},
+			},
+		},
+		propertyOrder: []string{
+			"length",
+		},
+		value: _nativeFunctionObject{
+			name: "next",
+			call: builtinArrayIterator_next(arrayItems),
+		},
+	}
+
+	return toValue_object(&_object{
+		runtime:     call.runtime,
+		class:       "Iterator",
+		objectClass: _classObject,
+		prototype:   call.runtime.global.ObjectPrototype,
+		extensible:  true,
+		value:       nil,
+		property: map[string]_property{
+			"next": _property{
+				mode: 0101,
+				value: Value{
+					kind:  valueObject,
+					value: next_function,
+				},
+			},
+		},
+	})
+}
+
+func builtinArrayIterator_next(list []Value) func(call FunctionCall) Value {
+	var index int
+	return func(call FunctionCall) Value {
+		result := call.runtime.newObject()
+		if len(list) == 0 {
+			result.put("value", UndefinedValue(), false)
+			result.put("done", toValue_bool(true), false)
+			return toValue_object(result)
+		}
+
+		result.put("value", list[index], false)
+		result.put("done", toValue_bool(false), false)
+
+		index++
+		if index == len(list) {
+			result.put("done", toValue_bool(true), false)
+		}
+
+		return toValue_object(result)
+	}
+}
+
 func builtinArray_map(call FunctionCall) Value {
 	thisObject := call.thisObject()
 	this := toValue_object(thisObject)

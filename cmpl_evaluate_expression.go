@@ -350,7 +350,6 @@ func (self *_runtime) cmpl_evaluate_nodeSequenceExpression(node *_nodeSequenceEx
 }
 
 func (self *_runtime) cmpl_evaluate_nodeUnaryExpression(node *_nodeUnaryExpression) Value {
-
 	target := self.cmpl_evaluate_nodeExpression(node.operand)
 	switch node.operator {
 	case token.TYPEOF, token.DELETE:
@@ -438,6 +437,9 @@ func (self *_runtime) cmpl_evaluate_nodeUnaryExpression(node *_nodeUnaryExpressi
 		case valueObject:
 			if targetValue._object().isCall() {
 				return toValue_string("function")
+			}
+			if targetValue._object().class == "Symbol" {
+				return toValue_string("symbol")
 			}
 			return toValue_string("object")
 		default:

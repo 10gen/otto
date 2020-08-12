@@ -24,10 +24,20 @@ func TestObject_(t *testing.T) {
 
 func TestStringObject(t *testing.T) {
 	tt(t, func() {
+		test, _ := test()
+
 		object := New().runtime.newStringObject(toValue("xyzzy"))
 		is(object.get("1"), "y")
 		is(object.get("10"), "undefined")
 		is(object.get("2"), "z")
+
+		test(`
+			var x = {}
+			var y = {}
+			y["Symbol(Symbol.toStringTag)"] = "Something"
+
+			x + "," + y
+		`, "[object Object],[object Something]")
 	})
 }
 

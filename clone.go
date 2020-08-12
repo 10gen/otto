@@ -17,11 +17,17 @@ func (in *_runtime) clone() *_runtime {
 	in.lck.Lock()
 	defer in.lck.Unlock()
 
+	clonedSymbols := make(map[interface{}]Value, len(in.symbols))
+	for k, v := range in.symbols {
+		clonedSymbols[k] = v
+	}
+
 	out := &_runtime{
 		debugger:   in.debugger,
 		random:     in.random,
 		stackLimit: in.stackLimit,
 		traceLimit: in.traceLimit,
+		symbols:    clonedSymbols,
 	}
 
 	clone := _clone{
@@ -38,6 +44,7 @@ func (in *_runtime) clone() *_runtime {
 	out.global = _global{
 		clone.object(in.global.Object),
 		clone.object(in.global.Function),
+		clone.object(in.global.Symbol),
 		clone.object(in.global.Array),
 		clone.object(in.global.String),
 		clone.object(in.global.Boolean),
@@ -56,6 +63,7 @@ func (in *_runtime) clone() *_runtime {
 
 		clone.object(in.global.ObjectPrototype),
 		clone.object(in.global.FunctionPrototype),
+		clone.object(in.global.SymbolPrototype),
 		clone.object(in.global.ArrayPrototype),
 		clone.object(in.global.StringPrototype),
 		clone.object(in.global.BooleanPrototype),

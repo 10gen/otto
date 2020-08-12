@@ -100,6 +100,39 @@ func TestArray_toString(t *testing.T) {
     })
 }
 
+func TestArray_iterator(t *testing.T) {
+    tt(t, func() {
+        test, _ := test()
+
+        test(`
+            var iterator = [1, 2, 3]["Symbol(Symbol.iterator)"]();
+            one = iterator.next().value
+            two = iterator.next().value
+            three = iterator.next().value
+
+            one + "," + two + "," + three
+        `, "1,2,3")
+
+        test(`
+            var iterator = [1, 2, 3]["Symbol(Symbol.iterator)"]();
+            one = iterator.next().done
+            two = iterator.next().done
+            three = iterator.next().done
+
+            one + "," + two + "," + three
+        `, "false,false,true")
+
+        test(`
+            var iterator = []["Symbol(Symbol.iterator)"]();
+            res = iterator.next()
+            val = res.value
+            done = res.done
+
+            val + "," + done
+        `, "undefined,true")
+    })
+}
+
 func TestArray_toLocaleString(t *testing.T) {
     tt(t, func() {
         test, _ := test()

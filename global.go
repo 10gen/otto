@@ -12,6 +12,9 @@ var (
 			return Value{}
 		},
 	}
+	prototypeValueSymbol = _symbolObject{
+		description: nil,
+	}
 	prototypeValueString = _stringASCII("")
 	// TODO Make this just false?
 	prototypeValueBoolean = Value{
@@ -43,7 +46,9 @@ var (
 
 func newContext() *_runtime {
 
-	self := &_runtime{}
+	self := &_runtime{
+		symbols: map[interface{}]Value{},
+	}
 
 	self.globalStash = self.newObjectStash(nil, nil)
 	self.globalObject = self.globalStash.object
@@ -163,6 +168,12 @@ func (runtime *_runtime) _newRegExp(pattern string, flags string) *_object {
 func (runtime *_runtime) newDate(epoch float64) *_object {
 	self := runtime.newDateObject(epoch)
 	self.prototype = runtime.global.DatePrototype
+	return self
+}
+
+func (runtime *_runtime) newSymbol(description interface{}) *_object {
+	self := runtime.newSymbolObject(description)
+	self.prototype = runtime.global.SymbolPrototype
 	return self
 }
 

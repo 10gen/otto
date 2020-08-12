@@ -4,6 +4,11 @@ import (
 	"math"
 )
 
+const (
+	symbolToStringTagPropertyName = "Symbol(Symbol.toStringTag)"
+	symbolIteratorTagPropertyName = "Symbol(Symbol.iterator)"
+)
+
 func _newContext(runtime *_runtime) {
 	{
 		runtime.global.ObjectPrototype = &_object{
@@ -23,6 +28,16 @@ func _newContext(runtime *_runtime) {
 			prototype:   runtime.global.ObjectPrototype,
 			extensible:  true,
 			value:       prototypeValueFunction,
+		}
+	}
+	{
+		runtime.global.SymbolPrototype = &_object{
+			runtime:     runtime,
+			class:       "Symbol",
+			objectClass: _classObject,
+			prototype:   runtime.global.ObjectPrototype,
+			extensible:  true,
+			value:       prototypeValueSymbol,
 		}
 	}
 	{
@@ -363,6 +378,74 @@ func _newContext(runtime *_runtime) {
 			"bind",
 			"constructor",
 			"length",
+		}
+	}
+	{
+		toString_function := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 0,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "toString",
+				call: builtinSymbol_toString,
+			},
+		}
+		valueOf_function := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 2,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "apply",
+				call: builtinSymbol_valueOf,
+			},
+		}
+		runtime.global.SymbolPrototype.property = map[string]_property{
+			"toString": _property{
+				mode: 0101,
+				value: Value{
+					kind:  valueObject,
+					value: toString_function,
+				},
+			},
+			"valueOf": _property{
+				mode: 0101,
+				value: Value{
+					kind:  valueObject,
+					value: valueOf_function,
+				},
+			},
+		}
+		runtime.global.SymbolPrototype.propertyOrder = []string{
+			"toString",
+			"valueOf",
 		}
 	}
 	{
@@ -884,6 +967,137 @@ func _newContext(runtime *_runtime) {
 			}
 	}
 	{
+		for_function := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 1,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "for",
+				call: builtinSymbol_for,
+			},
+		}
+		keyFor_function := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 1,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "keyFor",
+				call: builtinSymbol_keyFor,
+			},
+		}
+		symbol := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			value: _nativeFunctionObject{
+				name:      "Symbol",
+				call:      builtinSymbol,
+				construct: builtinNewSymbol,
+			},
+			property: map[string]_property{
+				"prototype": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueObject,
+						value: runtime.global.SymbolPrototype,
+					},
+				},
+				"for": _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: for_function,
+					},
+				},
+				"keyFor": _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: keyFor_function,
+					},
+				},
+				"toStringTag": _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: builtinNewSymbolNative(runtime, []Value{toValue_string("Symbol.toStringTag")}),
+					},
+				},
+				"iterator": _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: builtinNewSymbolNative(runtime, []Value{toValue_string("Symbol.iterator")}),
+					},
+				},
+			},
+			propertyOrder: []string{
+				"prototype",
+			},
+		}
+		runtime.global.Symbol = symbol
+		runtime.global.SymbolPrototype.property["constructor"] = _property{
+			mode: 0101,
+			value: Value{
+				kind:  valueObject,
+				value: runtime.global.Symbol,
+			},
+		}
+	}
+	{
+		iterator := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 0,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "values",
+				call: builtinArray_iterator,
+			},
+		}
 		toString_function := &_object{
 			runtime:     runtime,
 			class:       "Function",
@@ -1398,6 +1612,13 @@ func _newContext(runtime *_runtime) {
 			extensible:  true,
 			value:       nil,
 			property: map[string]_property{
+				symbolIteratorTagPropertyName: _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: iterator,
+					},
+				},
 				"length": _property{
 					mode: 0100,
 					value: Value{
@@ -6151,6 +6372,13 @@ func _newContext(runtime *_runtime) {
 					value: runtime.global.Date,
 				},
 			},
+			"Symbol": _property{
+				mode: 0101,
+				value: Value{
+					kind:  valueObject,
+					value: runtime.global.Symbol,
+				},
+			},
 			"RegExp": _property{
 				mode: 0101,
 				value: Value{
@@ -6255,6 +6483,7 @@ func _newContext(runtime *_runtime) {
 			"Number",
 			"Math",
 			"Date",
+			"Symbol",
 			"RegExp",
 			"Error",
 			"EvalError",

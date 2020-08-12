@@ -72,7 +72,17 @@ func builtinObject_toString(call FunctionCall) Value {
 	} else if call.This.IsNull() {
 		result = "[object Null]"
 	} else {
-		result = fmt.Sprintf("[object %s]", call.thisObject().class)
+		toStringTagProp := call.thisObject().getProperty(symbolToStringTagPropertyName)
+		var className string
+		if toStringTagProp != nil {
+			className = toStringTagProp.get(call.thisObject()).String()
+		}
+
+		if len(className) > 0 {
+			result = fmt.Sprintf("[object %s]", className)
+		} else {
+			result = fmt.Sprintf("[object %s]", call.thisObject().class)
+		}
 	}
 	return toValue_string(result)
 }
@@ -126,7 +136,16 @@ func builtinObject_getOwnPropertyDescriptor(call FunctionCall) Value {
 	name := call.Argument(1).string()
 	descriptor := object.getOwnProperty(name)
 	if descriptor == nil {
-		return Value{}
+		if name != symbolToStringTagPropertyName {
+			return Value{}
+		}
+
+		descriptor := _property{}
+		descriptor.mode = 0211
+		descriptor.value = _propertyGetSet{nil, nil}
+		result := call.runtime.fromPropertyDescriptor(descriptor)
+		result.defineOwnProperty(name, descriptor, false)
+		return toValue_object(result)
 	}
 	return toValue_object(call.runtime.fromPropertyDescriptor(*descriptor))
 }

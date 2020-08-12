@@ -625,6 +625,7 @@ sub newContext {
                     "Number",
                     "Math",
                     "Date",
+                    "Symbol",
                     "RegExp",
                     "Error",
                     "EvalError",
