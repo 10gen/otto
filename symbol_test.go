@@ -22,6 +22,18 @@ func TestSymbol(t *testing.T) {
 			res
 		`, "a: 1,b: 2,c: 3")
 
+		// creating an empty symbol should have an undefined description
+		test(`
+			var sym = Symbol()
+			sym.description
+		`, "undefined")
+
+		// the description of a symbol should be the value it was constructed with
+		test(`
+			var sym = Symbol("foo")
+			sym.description
+		`, "foo")
+
 		// new symbols should not equal
 		test(`
 			Symbol("foo") === Symbol("foo");
@@ -32,10 +44,25 @@ func TestSymbol(t *testing.T) {
 			typeof Symbol('foo');
 		`, "symbol")
 
-		// toString
+		// toString for a string
 		test(`
 			Symbol('foo').toString()
 		`, "Symbol(foo)")
+
+		// toString for an int
+		test(`
+			Symbol(42).toString()
+		`, "Symbol(42)")
+
+		// toString for a float
+		test(`
+			Symbol(42.3).toString()
+		`, "Symbol(42.3)")
+
+		// toString for an empty symbol should have an empty Symbol
+		test(`
+			Symbol().toString()
+		`, "Symbol()")
 
 		// Symbol.fors should equal
 		test(`
