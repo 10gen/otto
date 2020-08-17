@@ -39,6 +39,20 @@ func builtinObject_hasOwnProperty(call FunctionCall) Value {
 	return toValue_bool(thisObject.hasOwnProperty(propertyName))
 }
 
+func builtinObject_defineSetter(call FunctionCall) Value {
+	objectValue := call.This
+	object := objectValue._object()
+	if object == nil {
+		panic(call.runtime.panicTypeError())
+	}
+	name := call.Argument(0).string()
+	descriptor := _property{}
+	descriptor.mode = 0211
+	descriptor.value = _propertyGetSet{nil, call.Argument(1)._object()}
+	object.defineOwnProperty(name, descriptor, true)
+	return objectValue
+}
+
 func builtinObject_isPrototypeOf(call FunctionCall) Value {
 	value := call.Argument(0)
 	if !value.IsObject() {
@@ -78,7 +92,7 @@ func builtinObject_toString(call FunctionCall) Value {
 			className = toStringTagProp.get(call.thisObject()).String()
 		}
 
-		if len(className) > 0 {
+		if len(className) > 0 && className != "undefined" {
 			result = fmt.Sprintf("[object %s]", className)
 		} else {
 			result = fmt.Sprintf("[object %s]", call.thisObject().class)
@@ -142,7 +156,34 @@ func builtinObject_getOwnPropertyDescriptor(call FunctionCall) Value {
 
 		descriptor := _property{}
 		descriptor.mode = 0211
-		descriptor.value = _propertyGetSet{nil, nil}
+		descriptor.value = _propertyGetSet{
+			&_object{
+				runtime:     call.runtime,
+				class:       "Function",
+				objectClass: _classObject,
+				prototype:   call.runtime.global.FunctionPrototype,
+				extensible:  true,
+				property: map[string]_property{
+					"length": _property{
+						mode: 0,
+						value: Value{
+							kind:  valueNumber,
+							value: 0,
+						},
+					},
+				},
+				propertyOrder: []string{
+					"length",
+				},
+				value: _nativeFunctionObject{
+					name: "get",
+					call: func(call FunctionCall) Value {
+						return UndefinedValue()
+					},
+				},
+			},
+			nil,
+		}
 		result := call.runtime.fromPropertyDescriptor(descriptor)
 		result.defineOwnProperty(name, descriptor, false)
 		return toValue_object(result)

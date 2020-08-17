@@ -320,6 +320,19 @@ func TestObject_defineProperty(t *testing.T) {
 	})
 }
 
+func TestObject_defineSetter(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`
+			var o = {};
+			o.__defineSetter__('value', function(val) { this.anotherValue = val; });
+			o.value = 5;
+			o.value + "," + o.anotherValue
+		`, "undefined,5")
+	})
+}
+
 func TestObject_keys(t *testing.T) {
 	tt(t, func() {
 		test, _ := test()
@@ -628,6 +641,11 @@ func TestObjectGetterSetter(t *testing.T) {
             def.abc = 3.14159;
             [ def.hasOwnProperty("abc"), def.abc, abc ];
         `, "false,3.14159,3.14159")
+
+		// Symbol.toStringTag should have a default Descriptor
+		test(`
+			Object.getOwnPropertyDescriptor(Array.prototype, Symbol.toStringTag).get;
+		`, "function get() { [native code] }")
 	})
 }
 
