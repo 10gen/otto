@@ -708,11 +708,11 @@ type Object struct {
 }
 
 func (self Object) IncCyclicalCount() {
-	self.object.cyclicalCount++
+	self.object._incCyclicalCount()
 }
 
 func (self Object) DecCyclicalCount() {
-	self.object.cyclicalCount--
+	self.object._decCyclicalCount()
 }
 
 func (self Object) CyclicalCount() int {
