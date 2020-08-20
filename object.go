@@ -18,6 +18,8 @@ type _object struct {
 	propertyOrder []string
 
 	mu sync.RWMutex
+
+	cyclicalCount int
 }
 
 func newObject(runtime *_runtime, class string) *_object {

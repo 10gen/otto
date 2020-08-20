@@ -707,6 +707,18 @@ type Object struct {
 	value  Value
 }
 
+func (self Object) IncCyclicalCount() {
+	self.object.cyclicalCount++
+}
+
+func (self Object) DecCyclicalCount() {
+	self.object.cyclicalCount--
+}
+
+func (self Object) CyclicalCount() int {
+	return self.object.cyclicalCount
+}
+
 func _newObject(object *_object, value Value) *Object {
 	// value MUST contain object!
 	return &Object{
