@@ -1977,7 +1977,7 @@ func _newContext(runtime *_runtime) {
 					mode: 0,
 					value: Value{
 						kind:  valueNumber,
-						value: 2, // what is this value?
+						value: 2,
 					},
 				},
 			},

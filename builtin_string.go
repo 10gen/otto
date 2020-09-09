@@ -453,14 +453,8 @@ func builtinString_padStart(call FunctionCall) Value {
 	target := call.This.string()
 
 	var targetLength int64
-	padString := " "
-
 	if arg0, ok := call.getArgument(0); ok {
 		targetLength = arg0.number().int64
-	}
-
-	if arg1, ok := call.getArgument(1); ok {
-		padString = arg1.string()
 	}
 
 	delta := targetLength - int64(len(target))
@@ -468,15 +462,21 @@ func builtinString_padStart(call FunctionCall) Value {
 		return toValue_string(target)
 	}
 
+	padString := " "
+	if arg1, ok := call.getArgument(1); ok {
+		padString = arg1.string()
+	}
+	padStringLen := int64(len(padString))
+
 	var builder strings.Builder
 	for delta > 0 {
 		prefix := padString
-		if int64(len(padString)) > delta {
+		if padStringLen > delta {
 			prefix = padString[:delta]
 		}
 
 		if _, err := builder.WriteString(prefix); err != nil {
-			// error handling?
+			panic(err)
 		}
 
 		delta -= int64(len(padString))
