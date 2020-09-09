@@ -383,6 +383,122 @@ func TestObject_keys(t *testing.T) {
 	})
 }
 
+func TestObject_values(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`Object.values({ k1: 'abc', k2 :'def' })`, "abc,def")
+
+		test(`
+						function abc() {
+							this.k1 = "abc";
+							this.k2 = "def";
+						}
+						Object.values(new abc());
+				`, "abc,def")
+
+		test(`
+						function def() {
+							this.k3 = "ghi";
+						}
+						def.prototype = new abc();
+						Object.values(new def());
+				`, "ghi")
+
+		test(`
+						var ghi = Object.create(
+                {
+                    k1: "abc",
+                    k2: "def"
+                },
+                {
+                    k3: { value: "ghi", enumerable: true },
+                    k4: { value: "jkl", enumerable: false }
+                }
+            );
+            Object.values(ghi);
+				`, "ghi")
+
+		test(`
+            (function(abc, def, ghi){
+                return Object.values(arguments)
+            })(0, 1);
+        `, "0,1")
+
+		test(`
+            (function(abc, def, ghi){
+                return Object.values(arguments)
+            })(0, 1, 2, 3);
+        `, "0,1,2,3")
+	})
+}
+
+func TestObject_entries(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`Object.entries({ k1: 'abc', k2 :'def' })`, "k1,abc,k2,def")
+
+		test(`
+			      var e = Object.entries({ k1: 'abc', k2 :'def' });
+						[ e[0][0], e[0][1], e[1][0], e[1][1], ];
+				 `, "k1,abc,k2,def")
+
+		test(`
+						function abc() {
+							this.k1 = "abc";
+							this.k2 = "def";
+						}
+						Object.entries(new abc());
+				`, "k1,abc,k2,def")
+
+		test(`
+						function def() {
+							this.k3 = "ghi";
+						}
+						def.prototype = new abc();
+						Object.entries(new def());
+				`, "k3,ghi")
+
+		test(`
+						var ghi = Object.create(
+		            {
+		                k1: "abc",
+		                k2: "def"
+		            },
+		            {
+		                k3: { value: "ghi", enumerable: true },
+		                k4: { value: "jkl", enumerable: false }
+		            }
+		        );
+		        Object.entries(ghi);
+				`, "k3,ghi")
+
+		test(`
+		        (function(abc, def, ghi){
+		            return Object.entries(arguments)
+		        })(0, 1);
+		    `, "0,0,1,1")
+
+		test(`
+		        (function(abc, def, ghi){
+		            return Object.entries(arguments)
+		        })(0, 1, 2, 3);
+		    `, "0,0,1,1,2,2,3,3")
+	})
+}
+
+func TestObject_fromEntries(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`
+					 var o = Object.fromEntries([['a', 1], ['b', true], ['c', 'sea']]);
+					 [ o.a, o.b, o.c ]
+				 `, "1,true,sea")
+	})
+}
+
 func TestObject_getOwnPropertyNames(t *testing.T) {
 	tt(t, func() {
 		test, _ := test()

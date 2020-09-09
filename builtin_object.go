@@ -352,6 +352,55 @@ func builtinObject_keys(call FunctionCall) Value {
 	panic(call.runtime.panicTypeError())
 }
 
+func builtinObject_values(call FunctionCall) Value {
+	if object, values := call.Argument(0)._object(), []Value(nil); nil != object {
+		object.enumerate(false, func(name string) bool {
+			values = append(values, object.get(name))
+			return true
+		})
+		return toValue_object(call.runtime.newArrayOf(values))
+	}
+	panic(call.runtime.panicTypeError())
+}
+
+func builtinObject_entries(call FunctionCall) Value {
+	if object := call.Argument(0)._object(); nil != object {
+		var entries []Value
+
+		object.enumerate(false, func(name string) bool {
+			entries = append(entries, toValue_object(call.runtime.newArrayOf([]Value{
+				toValue_string(name),
+				object.get(name),
+			})))
+			return true
+		})
+
+		return toValue_object(call.runtime.newArrayOf(entries))
+	}
+	panic(call.runtime.panicTypeError())
+}
+
+func builtinObject_fromEntries(call FunctionCall) Value {
+	res := call.runtime.newObject()
+	if object := call.Argument(0)._object(); nil != object {
+		if !isArray(object) {
+			panic(call.runtime.panicTypeError())
+		}
+		length := int64(objectLength(object))
+		for i := int64(0); i < length; i += 1 {
+			entry := object.get(arrayIndexToString(i))._object()
+			if !isArray(entry) {
+				panic(call.runtime.panicTypeError())
+			}
+			key := entry.get("0").string()
+			value := entry.get("1")
+			res.put(key, value, true)
+		}
+		return toValue_object(res)
+	}
+	panic(call.runtime.panicTypeError())
+}
+
 func builtinObject_getOwnPropertyNames(call FunctionCall) Value {
 	if object, propertyNames := call.Argument(0)._object(), []Value(nil); nil != object {
 		object.enumerate(true, func(name string) bool {
