@@ -162,6 +162,18 @@ func BenchmarkString_match(b *testing.B) {
 	}
 }
 
+func TestString_padStart(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`"abc".padStart(10)`, "       abc")
+		test(`"abc".padStart(10, "foo")`, "foofoofabc")
+		test(`"abc".padStart(6, "123456")`, "123abc")
+		test(`"abc".padStart(8, "0")`, "00000abc")
+		test(`"abc".padStart(1)`, "abc")
+	})
+}
+
 func TestString_replace(t *testing.T) {
 	tt(t, func() {
 		test, _ := test()
@@ -397,6 +409,20 @@ func TestString_trimLeft(t *testing.T) {
 	})
 }
 
+func TestString_trimStart(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`"		abc\u000B".trimStart()`, "abc\u000B")
+		test(`"abc ".trimStart()`, "abc ")
+		test(`
+            var a = "\u180Eabc \u000B "
+            var b = a.trimStart()
+            a.length + b.length
+        `, 13)
+	})
+}
+
 func TestString_trimRight(t *testing.T) {
 	tt(t, func() {
 		test, _ := test()
@@ -406,6 +432,20 @@ func TestString_trimRight(t *testing.T) {
 		test(`
             var a = "\u180Eabc \u000B "
             var b = a.trimRight()
+            a.length + b.length
+        `, 11)
+	})
+}
+
+func TestString_trimEnd(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`"		abc\u000B".trimEnd()`, "		abc")
+		test(`" abc ".trimEnd()`, " abc")
+		test(`
+            var a = "\u180Eabc \u000B "
+            var b = a.trimEnd()
             a.length + b.length
         `, 11)
 	})
