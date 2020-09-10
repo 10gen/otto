@@ -172,6 +172,145 @@ func TestArray_concat(t *testing.T) {
 	})
 }
 
+func TestArray_find(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`["a", "needle", "in", "a", "haystack"].find(function(word) { return word.length > 1 })`, "needle")
+
+		test(`["one", "three", "four", "two"].find(function(word, idx) { return idx > 1 })`, "four")
+
+		test(`[0, 1, 3, 2].find(function(n, i, arr) { return n > arr[i + 1]  })`, 3)
+
+		test(`
+		 			var inventory = [
+					  {name: 'apples', quantity: 2},
+					  {name: 'bananas', quantity: 0},
+					  {name: 'cherries', quantity: 5}
+					];
+
+					function isCherries(fruit) {
+					  return fruit.name === 'cherries';
+					}
+
+					var found = inventory.find(isCherries);
+					[ found.name, found.quantity ];
+			   `, "cherries,5")
+
+		test(`
+		 			function isPrime(element, index, array) {
+					  var start = 2;
+					  while (start <= Math.sqrt(element)) {
+					    if (element % start++ < 1) {
+					      return false;
+					    }
+					  }
+					  return element > 1;
+					}
+					[4, 6, 8, 12].find(isPrime)
+			   `, "undefined")
+
+		test(`[4, 5, 8, 12].find(isPrime)`, 5)
+
+		test(`
+				 var arr = [0,1,,,,5,6];
+				 var res = [];
+				 arr.find(function(n, i) { res.push(i, n) })
+				 res
+				`, "0,0,1,1,2,,3,,4,,5,5,6,6")
+
+		test(`
+				 var arr = [0,1,,,,5,6];
+				 var res = [];
+				 arr.find(function(n, i) {
+					 if (i === 0) {
+						 res.push('deleted')
+						 delete arr[5]
+					 }
+					 res.push(i, n)
+				 })
+				 res
+				`, "deleted,0,0,1,1,2,,3,,4,,5,,6,6")
+
+		test(`
+				 var newThis = { 1: 'one', 2: 'two' }
+				 var res = [];
+				 [1, 2].find(function(n) {
+					 return this[n] == 'two';
+				 }, newThis)
+				`, 2)
+	})
+}
+
+func TestArray_findIndex(t *testing.T) {
+	tt(t, func() {
+		test, _ := test()
+
+		test(`["a", "needle", "in", "a", "haystack"].findIndex(function(word) { return word.length > 1 })`, 1)
+
+		test(`["one", "three", "four", "two"].findIndex(function(word, idx) { return idx > 1 })`, 2)
+
+		test(`[0, 1, 3, 2].findIndex(function(n, i, arr) { return n > arr[i + 1]  })`, 2)
+
+		test(`
+			 			var inventory = [
+						  {name: 'apples', quantity: 2},
+						  {name: 'bananas', quantity: 0},
+						  {name: 'cherries', quantity: 5}
+						];
+
+						function isCherries(fruit) {
+						  return fruit.name === 'cherries';
+						}
+
+						inventory.findIndex(isCherries);
+			   `, 2)
+
+		test(`
+		 			function isPrime(element, index, array) {
+					  var start = 2;
+					  while (start <= Math.sqrt(element)) {
+					    if (element % start++ < 1) {
+					      return false;
+					    }
+					  }
+					  return element > 1;
+					}
+					[4, 6, 8, 12].findIndex(isPrime)
+			   `, -1)
+
+		test(`[4, 5, 8, 12].findIndex(isPrime)`, 1)
+
+		test(`
+				 var arr = [0,1,,,,5,6];
+				 var res = [];
+				 arr.findIndex(function(n, i) { res.push(i, n) })
+				 res
+				`, "0,0,1,1,2,,3,,4,,5,5,6,6")
+
+		test(`
+				 var arr = [0,1,,,,5,6];
+				 var res = [];
+				 arr.findIndex(function(n, i) {
+					 if (i === 0) {
+						 res.push('deleted')
+						 delete arr[5]
+					 }
+					 res.push(i, n)
+				 })
+				 res
+				`, "deleted,0,0,1,1,2,,3,,4,,5,,6,6")
+
+		test(`
+				 var newThis = { 1: 'one', 2: 'two' }
+				 var res = [];
+				 [1, 2].findIndex(function(n) {
+					 return this[n] == 'two';
+				 }, newThis)
+				`, 1)
+	})
+}
+
 func TestArray_splice(t *testing.T) {
 	tt(t, func() {
 		test, _ := test()

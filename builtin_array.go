@@ -89,6 +89,63 @@ func builtinArray_concat(call FunctionCall) Value {
 	return toValue_object(call.runtime.newArrayOf(valueArray))
 }
 
+func builtinArray_find(call FunctionCall) Value {
+	thisObject := call.thisObject()
+	length := int64(toUint32(thisObject.get("length")))
+
+	callback := call.Argument(0)._object()
+
+	thisArg := UndefinedValue()
+	if arg1, ok := call.getArgument(1); ok {
+		thisArg = arg1
+	}
+
+	for i := int64(0); i < length; i++ {
+		elem := thisObject.get(arrayIndexToString(i))
+
+		res := callback.call(
+			thisArg,
+			[]Value{elem, toValue_int64(i), toValue(thisObject)},
+			false,
+			nativeFrame,
+		)
+		if ans := res.bool(); ans {
+			return elem
+		}
+	}
+
+	return UndefinedValue()
+}
+
+func builtinArray_findIndex(call FunctionCall) Value {
+	thisObject := call.thisObject()
+	length := int64(toUint32(thisObject.get("length")))
+
+	callback := call.Argument(0)._object()
+
+	thisArg := UndefinedValue()
+	if arg1, ok := call.getArgument(1); ok {
+		thisArg = arg1
+	}
+
+	for i := int64(0); i < length; i++ {
+		elem := thisObject.get(arrayIndexToString(i))
+		idx := toValue_int64(i)
+
+		res := callback.call(
+			thisArg,
+			[]Value{elem, idx, toValue(thisObject)},
+			false,
+			nativeFrame,
+		)
+		if ans := res.bool(); ans {
+			return idx
+		}
+	}
+
+	return toValue_int(-1)
+}
+
 func builtinArray_shift(call FunctionCall) Value {
 	thisObject := call.thisObject()
 	length := int64(toUint32(thisObject.get("length")))
