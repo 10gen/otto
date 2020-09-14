@@ -752,22 +752,6 @@ func (self Object) KeysByParent() [][]string {
 	return a
 }
 
-// Values gets the values for the given object.
-//
-// Equivalent to calling Object.values on the object.
-func (self Object) Values() []Value {
-	var values []Value
-	self.object.enumerate(false, func(name string) bool {
-		value, err := self.Get(name)
-		if err != nil {
-			return false
-		}
-		values = append(values, value)
-		return true
-	})
-	return values
-}
-
 // Class will return the class string of the object.
 //
 // The return value will (generally) be one of:

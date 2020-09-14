@@ -3,7 +3,6 @@ package otto
 import (
 	"bytes"
 	"io"
-	"math"
 	"testing"
 
 	"github.com/robertkrimen/otto/parser"
@@ -839,16 +838,7 @@ func TestAPI(t *testing.T) {
 		value, err = object.Get("abc")
 		is(err, nil)
 		is(value, 1)
-
-		expectedKeys := []string{"abc", "def", "3.14159"}
-		expectedValues := []interface{}{1, false, math.NaN()}
-		is(object.Keys(), expectedKeys)
-
-		values := object.Values()
-		is(len(values), len(expectedValues))
-		for i, value := range values {
-			is(value, expectedValues[i])
-		}
+		is(object.Keys(), []string{"abc", "def", "3.14159"})
 
 		test(`
             abc = [ 0, 1, 2, 3.14159, "abc", , ];
@@ -857,16 +847,7 @@ func TestAPI(t *testing.T) {
 		abc, err = vm.Get("abc")
 		is(err, nil)
 		object = abc.Object() // Object abc
-
-		expectedKeys = []string{"0", "1", "2", "3", "4", "def"}
-		expectedValues = []interface{}{0, 1, 2, 3.14159, "abc", nil}
-		is(object.Keys(), expectedKeys)
-
-		values = object.Values()
-		is(len(values), len(expectedValues))
-		for i, value := range values {
-			is(value, expectedValues[i])
-		}
+		is(object.Keys(), []string{"0", "1", "2", "3", "4", "def"})
 	})
 }
 
