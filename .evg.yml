@@ -1,0 +1,38 @@
+functions:
+  "fetch_go113":
+    - command: shell.exec
+      params:
+        script: |
+          set -e
+          curl ${go_url} -o go.tar.gz
+          tar xvf ./go.tar.gz
+  "setup_project":
+    - command: git.get_project
+      params:
+        directory: otto
+
+tasks:
+  - name: test
+    commands:
+      - func: "fetch_go113"
+      - func: "setup_project"
+      - command: shell.exec
+        params:
+          script: |
+            set -e
+            export ROOT_DIR=`pwd`
+            export GOROOT=$ROOT_DIR/go
+            export PATH=$ROOT_DIR/go/bin:$PATH
+            
+            cd otto
+            go test -v ./...
+
+buildvariants:
+  - name: linux-64
+    display_name: Linux-64
+    run_on:
+      - rhel70
+    expansions:
+      go_url: "https://dl.google.com/go/go1.13.6.linux-amd64.tar.gz"
+    tasks:
+      - name: test
