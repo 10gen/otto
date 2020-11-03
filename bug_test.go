@@ -190,7 +190,7 @@ func Test_issue24(t *testing.T) {
 			vm.Set("abc", []string{"abc", "def", "ghi"})
 			value, err := vm.Get("abc")
 			is(err, nil)
-			export, _ := value.Export()
+			export := value.Export()
 			{
 				value, valid := export.([]string)
 				is(valid, true)
@@ -204,7 +204,7 @@ func Test_issue24(t *testing.T) {
 			vm.Set("abc", [...]string{"abc", "def", "ghi"})
 			value, err := vm.Get("abc")
 			is(err, nil)
-			export, _ := value.Export()
+			export := value.Export()
 			{
 				value, valid := export.([3]string)
 				is(valid, true)
@@ -218,7 +218,7 @@ func Test_issue24(t *testing.T) {
 			vm.Set("abc", &[...]string{"abc", "def", "ghi"})
 			value, err := vm.Get("abc")
 			is(err, nil)
-			export, _ := value.Export()
+			export := value.Export()
 			{
 				value, valid := export.(*[3]string)
 				is(valid, true)
@@ -232,7 +232,7 @@ func Test_issue24(t *testing.T) {
 			vm.Set("abc", map[int]string{0: "abc", 1: "def", 2: "ghi"})
 			value, err := vm.Get("abc")
 			is(err, nil)
-			export, _ := value.Export()
+			export := value.Export()
 			{
 				value, valid := export.(map[int]string)
 				is(valid, true)
@@ -246,7 +246,7 @@ func Test_issue24(t *testing.T) {
 			vm.Set("abc", _abcStruct{Abc: true, Ghi: "Nothing happens."})
 			value, err := vm.Get("abc")
 			is(err, nil)
-			export, _ := value.Export()
+			export := value.Export()
 			{
 				value, valid := export.(_abcStruct)
 				is(valid, true)
@@ -260,7 +260,7 @@ func Test_issue24(t *testing.T) {
 			vm.Set("abc", &_abcStruct{Abc: true, Ghi: "Nothing happens."})
 			value, err := vm.Get("abc")
 			is(err, nil)
-			export, _ := value.Export()
+			export := value.Export()
 			{
 				value, valid := export.(*_abcStruct)
 				is(valid, true)

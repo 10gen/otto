@@ -1440,8 +1440,7 @@ func makeTestOttoEvalFunction(src, expected interface{}) func(c FunctionCall) Va
 			panic(err)
 		}
 
-		i, err := v.Export()
-		is(err, nil)
+		i := v.Export()
 		if err != nil {
 			panic(err)
 		}
@@ -1503,8 +1502,7 @@ func TestOttoEval(t *testing.T) {
 
 		v, err := vm.Eval("a + b")
 		is(err, nil)
-		r, err := v.Export()
-		is(err, nil)
+		r := v.Export()
 		is(r, 3)
 	})
 }

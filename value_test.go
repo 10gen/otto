@@ -218,8 +218,7 @@ func TestIsNative(t *testing.T) {
 		vm := New()
 
 		ctor := func(call FunctionCall) interface{} {
-			exp, _ := call.ArgumentList[0].Export()
-			return exp
+			return call.ArgumentList[0].Export()
 		}
 
 		cls := vm.CreateNativeClass(

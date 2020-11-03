@@ -682,8 +682,8 @@ func (self Value) IsNative() bool {
 //      Array       -> []interface{}
 //      Object      -> map[string]interface{}
 //
-func (self Value) Export() (interface{}, error) {
-	return self.export(), nil
+func (self Value) Export() interface{} {
+	return self.export()
 }
 
 func (self Value) export() interface{} {

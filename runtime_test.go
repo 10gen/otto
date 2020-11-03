@@ -1,223 +1,205 @@
 package otto
 
 import (
-    "context"
-    "math"
-    "testing"
+	"context"
+	"math"
+	"testing"
 )
 
 func TestContext(t *testing.T) {
-    key := "key"
-    vm := NewWithContext(context.WithValue(context.Background(), key, 100))
+	key := "key"
+	vm := NewWithContext(context.WithValue(context.Background(), key, 100))
 
-    incrementer := func(ctx context.Context) context.Context {
-        return context.WithValue(ctx, key, ctx.Value(key).(int)+1)
-    }
-    vm.Set("check", func(fc FunctionCall) Value {
-        val, _ := ToValue(incrementer(fc.Context()).Value(key))
-        return val
-    })
-    vm.Set("nativecall", func(fc FunctionCall) Value {
-        val, _ := fc.Argument(0).CallWithContext(incrementer(fc.Context()), NullValue())
-        return val
-    })
-    _, err := vm.Eval(`
+	incrementer := func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, key, ctx.Value(key).(int)+1)
+	}
+	vm.Set("check", func(fc FunctionCall) Value {
+		val, _ := ToValue(incrementer(fc.Context()).Value(key))
+		return val
+	})
+	vm.Set("nativecall", func(fc FunctionCall) Value {
+		val, _ := fc.Argument(0).CallWithContext(incrementer(fc.Context()), NullValue())
+		return val
+	})
+	_, err := vm.Eval(`
         exports = function foo(){
             return check()
         }
     `)
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    fooFunc, err := vm.Get("exports")
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    if !fooFunc.IsFunction() {
-        t.Fatalf("foo should be a function, but got %v", fooFunc)
-    }
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	fooFunc, err := vm.Get("exports")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if !fooFunc.IsFunction() {
+		t.Fatalf("foo should be a function, but got %v", fooFunc)
+	}
 
-    result, err := fooFunc.CallWithContext(context.WithValue(context.Background(), key, 10), NullValue())
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    resultV, err := result.Export()
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
+	result, err := fooFunc.CallWithContext(context.WithValue(context.Background(), key, 10), NullValue())
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV := result.Export()
 
-    if resultV != 11 {
-        t.Fatalf("expected 11 but got %v", resultV)
-    }
+	if resultV != 11 {
+		t.Fatalf("expected 11 but got %v", resultV)
+	}
 
-    result, err = fooFunc.Call(NullValue())
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    resultV, err = result.Export()
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
+	result, err = fooFunc.Call(NullValue())
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV = result.Export()
 
-    if resultV != 101 {
-        t.Fatalf("expected 101 but got %v", resultV)
-    }
+	if resultV != 101 {
+		t.Fatalf("expected 101 but got %v", resultV)
+	}
 
-    result, err = vm.EvalWithContext(context.WithValue(context.Background(), key, 10), "exports()")
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    resultV, err = result.Export()
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
+	result, err = vm.EvalWithContext(context.WithValue(context.Background(), key, 10), "exports()")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV = result.Export()
 
-    if resultV != 11 {
-        t.Fatalf("expected 11 but got %v", resultV)
-    }
+	if resultV != 11 {
+		t.Fatalf("expected 11 but got %v", resultV)
+	}
 
-    result, err = vm.Eval("exports()")
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    resultV, err = result.Export()
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
+	result, err = vm.Eval("exports()")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV = result.Export()
 
-    if resultV != 101 {
-        t.Fatalf("expected 101 but got %v", resultV)
-    }
+	if resultV != 101 {
+		t.Fatalf("expected 101 but got %v", resultV)
+	}
 
-    _, err = vm.Eval(`
+	_, err = vm.Eval(`
         exports = function foo(){
             return check()
         }.bind(undefined)
     `)
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    fooFunc, err = vm.Get("exports")
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    if !fooFunc.IsFunction() {
-        t.Fatalf("foo should be a function, but got %v", fooFunc)
-    }
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	fooFunc, err = vm.Get("exports")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if !fooFunc.IsFunction() {
+		t.Fatalf("foo should be a function, but got %v", fooFunc)
+	}
 
-    result, err = fooFunc.CallWithContext(context.WithValue(context.Background(), key, 12), NullValue())
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    resultV, err = result.Export()
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
+	result, err = fooFunc.CallWithContext(context.WithValue(context.Background(), key, 12), NullValue())
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV = result.Export()
 
-    if resultV != 13 {
-        t.Fatalf("expected 13 but got %v", resultV)
-    }
+	if resultV != 13 {
+		t.Fatalf("expected 13 but got %v", resultV)
+	}
 
-    _, err = vm.Eval(`
+	_, err = vm.Eval(`
         exports = function foo(){
             return nativecall(check)
         }
     `)
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    fooFunc, err = vm.Get("exports")
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    if !fooFunc.IsFunction() {
-        t.Fatalf("foo should be a function, but got %v", fooFunc)
-    }
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	fooFunc, err = vm.Get("exports")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if !fooFunc.IsFunction() {
+		t.Fatalf("foo should be a function, but got %v", fooFunc)
+	}
 
-    result, err = fooFunc.CallWithContext(context.WithValue(context.Background(), key, 8), NullValue())
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
-    resultV, err = result.Export()
-    if err != nil {
-        t.Fatalf(err.Error())
-    }
+	result, err = fooFunc.CallWithContext(context.WithValue(context.Background(), key, 8), NullValue())
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	resultV = result.Export()
 
-    if resultV != 10 {
-        t.Fatalf("expected 10 but got %v", resultV)
-    }
+	if resultV != 10 {
+		t.Fatalf("expected 10 but got %v", resultV)
+	}
 }
 
 // FIXME terst, Review tests
 
 func TestOperator(t *testing.T) {
-    tt(t, func() {
-        test, vm := test()
+	tt(t, func() {
+		test, vm := test()
 
-        test("xyzzy = 1")
-        test("xyzzy", 1)
+		test("xyzzy = 1")
+		test("xyzzy", 1)
 
-        if true {
-            vm.Set("twoPlusTwo", func(FunctionCall) Value {
-                return toValue(5)
-            })
-            test("twoPlusTwo( 1 )", 5)
+		if true {
+			vm.Set("twoPlusTwo", func(FunctionCall) Value {
+				return toValue(5)
+			})
+			test("twoPlusTwo( 1 )", 5)
 
-            test("1 + twoPlusTwo( 1 )", 6)
+			test("1 + twoPlusTwo( 1 )", 6)
 
-            test("-1 + twoPlusTwo( 1 )", 4)
-        }
+			test("-1 + twoPlusTwo( 1 )", 4)
+		}
 
-        test("result = 4")
-        test("result", 4)
+		test("result = 4")
+		test("result", 4)
 
-        test("result += 1")
-        test("result", 5)
+		test("result += 1")
+		test("result", 5)
 
-        test("result *= 2")
-        test("result", 10)
+		test("result *= 2")
+		test("result", 10)
 
-        test("result /= 2")
-        test("result", 5)
+		test("result /= 2")
+		test("result", 5)
 
-        test("result = 112.51 % 3.1")
-        test("result", 0.9100000000000019)
+		test("result = 112.51 % 3.1")
+		test("result", 0.9100000000000019)
 
-        test("result = 'Xyzzy'")
-        test("result", "Xyzzy")
+		test("result = 'Xyzzy'")
+		test("result", "Xyzzy")
 
-        test("result = 'Xyz' + 'zy'")
-        test("result", "Xyzzy")
+		test("result = 'Xyz' + 'zy'")
+		test("result", "Xyzzy")
 
-        test("result = \"Xyzzy\"")
-        test("result", "Xyzzy")
+		test("result = \"Xyzzy\"")
+		test("result", "Xyzzy")
 
-        test("result = 1; result = result")
-        test("result", 1)
+		test("result = 1; result = result")
+		test("result", 1)
 
-        test(`
+		test(`
             var result64
             =
             64
             , result10 =
             10
         `)
-        test("result64", 64)
-        test("result10", 10)
+		test("result64", 64)
+		test("result10", 10)
 
-        test(`
+		test(`
             result = 1;
             result += 1;
         `)
-        test("result", 2)
-    })
+		test("result", 2)
+	})
 }
 
 func TestFunction_(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             result = 2
             xyzzy = function() {
                 result += 1
@@ -226,19 +208,19 @@ func TestFunction_(t *testing.T) {
             result;
         `, 3)
 
-        test(`
+		test(`
             xyzzy = function() {
                 return 1
             }
             result = xyzzy()
         `, 1)
 
-        test(`
+		test(`
             xyzzy = function() {}
             result = xyzzy()
         `, "undefined")
 
-        test(`
+		test(`
             xyzzy = function() {
                 return 64
                 return 1
@@ -246,7 +228,7 @@ func TestFunction_(t *testing.T) {
             result = xyzzy()
         `, 64)
 
-        test(`
+		test(`
             result = 4
             xyzzy = function() {
                 result = 2
@@ -255,7 +237,7 @@ func TestFunction_(t *testing.T) {
             result;
         `, 2)
 
-        test(`
+		test(`
             result = 4
             xyzzy = function() {
                 var result
@@ -265,7 +247,7 @@ func TestFunction_(t *testing.T) {
             result;
         `, 4)
 
-        test(`
+		test(`
             xyzzy = function() {
                 var result = 4
                 return result
@@ -273,7 +255,7 @@ func TestFunction_(t *testing.T) {
             result = xyzzy()
         `, 4)
 
-        test(`
+		test(`
             xyzzy = function() {
                     function test() {
                         var result = 1
@@ -284,7 +266,7 @@ func TestFunction_(t *testing.T) {
             result = xyzzy() + 1
         `, 3)
 
-        test(`
+		test(`
             xyzzy = function() {
                 function test() {
                     var result = 1
@@ -298,28 +280,28 @@ func TestFunction_(t *testing.T) {
             [ result, _xyzzy ];
         `, "5,2")
 
-        test(`
+		test(`
             xyzzy = function(apple) {
                 return 1
             }
             result = xyzzy(1)
         `, 1)
 
-        test(`
+		test(`
             xyzzy = function(apple) {
                 return apple + 1
             }
             result = xyzzy(2)
         `, 3)
 
-        test(`
+		test(`
             {
                 result = 1
                 result += 1;
             }
         `, 2)
 
-        test(`
+		test(`
             var global = 1
             outer = function() {
                 var global = 2
@@ -331,7 +313,7 @@ func TestFunction_(t *testing.T) {
             result = outer()
         `, 2)
 
-        test(`
+		test(`
             var apple = 1
             var banana = function() {
                 return apple
@@ -343,13 +325,13 @@ func TestFunction_(t *testing.T) {
             result = cherry()
         `, 1)
 
-        test(`
+		test(`
             function xyz() {
             };
             delete xyz;
         `, false)
 
-        test(`
+		test(`
             var abc = function __factorial(def){
                 if (def === 1) {
                     return def;
@@ -359,14 +341,14 @@ func TestFunction_(t *testing.T) {
             };
             abc(3);
         `, 6)
-    })
+	})
 }
 
 func TestDoWhile(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             limit = 4;
             result = 0;
             do { 
@@ -376,18 +358,18 @@ func TestDoWhile(t *testing.T) {
             result;
         `, 4)
 
-        test(`
+		test(`
             result = eval("do {abc=1; break; abc=2;} while (0);");
             [ result, abc ];
         `, "1,1")
-    })
+	})
 }
 
 func TestContinueBreak(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             limit = 4
             result = 0
             while (limit) {
@@ -402,7 +384,7 @@ func TestContinueBreak(t *testing.T) {
             [ result, limit ];
         `, "3,0")
 
-        test(`
+		test(`
             limit = 4
             result = 0
             while (limit) {
@@ -418,7 +400,7 @@ func TestContinueBreak(t *testing.T) {
             result;
         `, 0)
 
-        test(`
+		test(`
             limit = 4
             result = 0
             do {
@@ -433,14 +415,14 @@ func TestContinueBreak(t *testing.T) {
             } while (limit)
             result;
         `, 0)
-    })
+	})
 }
 
 func TestTryCatchError(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             var abc
             try {
                 1()
@@ -451,93 +433,93 @@ func TestTryCatchError(t *testing.T) {
             abc;
         `, "TypeError: 1 is not a function")
 
-    })
+	})
 }
 
 func TestPositiveNegativeZero(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`1/0`, _Infinity)
-        test(`1/-0`, -_Infinity)
-        test(`
+		test(`1/0`, _Infinity)
+		test(`1/-0`, -_Infinity)
+		test(`
             abc = -0
             1/abc
         `, -_Infinity)
-    })
+	})
 }
 
 func TestComparison(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             undefined = 1; undefined;
         `, "undefined")
 
-        test("undefined == undefined", true)
+		test("undefined == undefined", true)
 
-        test("undefined != undefined", false)
+		test("undefined != undefined", false)
 
-        test("null == null", true)
+		test("null == null", true)
 
-        test("null != null", false)
+		test("null != null", false)
 
-        test("0 == 1", false)
+		test("0 == 1", false)
 
-        is(negativeZero(), -0)
-        is(positiveZero(), 0)
-        is(math.Signbit(negativeZero()), true)
-        is(positiveZero() == negativeZero(), true)
+		is(negativeZero(), -0)
+		is(positiveZero(), 0)
+		is(math.Signbit(negativeZero()), true)
+		is(positiveZero() == negativeZero(), true)
 
-        test("1 == 1", true)
+		test("1 == 1", true)
 
-        test("'Hello, World.' == 'Goodbye, World.'", false)
+		test("'Hello, World.' == 'Goodbye, World.'", false)
 
-        test("'Hello, World.' == true", false)
+		test("'Hello, World.' == true", false)
 
-        test("'Hello, World.' == false", false)
+		test("'Hello, World.' == false", false)
 
-        test("'Hello, World.' == 1", false)
+		test("'Hello, World.' == 1", false)
 
-        test("1 == 'Hello, World.'", false)
+		test("1 == 'Hello, World.'", false)
 
-        is(parseNumber("-1"), -1)
+		is(parseNumber("-1"), -1)
 
-        test("0+Object", "0function Object() { [native code] }")
-    })
+		test("0+Object", "0function Object() { [native code] }")
+	})
 }
 
 func TestComparisonRelational(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test("0 < 0", false)
+		test("0 < 0", false)
 
-        test("0 > 0", false)
+		test("0 > 0", false)
 
-        test("0 <= 0", true)
+		test("0 <= 0", true)
 
-        test("0 >= 0", true)
+		test("0 >= 0", true)
 
-        test("'   0' >= 0", true)
+		test("'   0' >= 0", true)
 
-        test("'_   0' >= 0", false)
-    })
+		test("'_   0' >= 0", false)
+	})
 }
 
 func TestArguments(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             xyzzy = function() {
                 return arguments[0]
             }
             result = xyzzy("xyzzy");
         `, "xyzzy")
 
-        test(`
+		test(`
             xyzzy = function() {
                 arguments[0] = "abcdef"
                 return arguments[0]
@@ -545,7 +527,7 @@ func TestArguments(t *testing.T) {
             result = xyzzy("xyzzy");
         `, "abcdef")
 
-        test(`
+		test(`
             xyzzy = function(apple) {
                 apple = "abcdef"
                 return arguments[0]
@@ -553,35 +535,35 @@ func TestArguments(t *testing.T) {
             result = xyzzy("xyzzy");
         `, "abcdef")
 
-        test(`
+		test(`
             (function(){
                 return arguments
             })()
         `, "[object Arguments]")
 
-        test(`
+		test(`
             (function(){
                 return arguments.length
             })()
         `, 0)
 
-        test(`
+		test(`
             (function(){
                 return arguments.length
             })(1, 2, 4, 8, 10)
         `, 5)
-    })
+	})
 }
 
 func TestObjectLiteral(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             ({});
         `, "[object Object]")
 
-        test(`
+		test(`
             var abc = {
                 xyzzy: "Nothing happens.",
                 get 1e2() {
@@ -597,7 +579,7 @@ func TestObjectLiteral(t *testing.T) {
             [ abc["1e2"], abc.null, abc["[\n]"] ]; 
         `, "3.14159,true,<>")
 
-        test(`
+		test(`
             var abc = {
                 xyzzy: "Nothing happens.",
                 set 1e2() {
@@ -611,72 +593,72 @@ func TestObjectLiteral(t *testing.T) {
             };
             [ abc["1e2"] = Infinity, abc[3.14159], abc.null = "xyz", abc.def ];
         `, "Infinity,100,xyz,xyz")
-    })
+	})
 }
 
 func TestUnaryPrefix(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             var result = 0;
             [++result, result];
         `, "1,1")
 
-        test(`
+		test(`
             result = 0;
             [--result, result];
         `, "-1,-1")
 
-        test(`
+		test(`
             var object = { valueOf: function() { return 1; } };
             result = ++object;
             [ result, typeof result ];
         `, "2,number")
 
-        test(`
+		test(`
             var object = { valueOf: function() { return 1; } };
             result = --object;
             [ result, typeof result ];
         `, "0,number")
-    })
+	})
 }
 
 func TestUnaryPostfix(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             var result = 0;
             result++;
             [ result++, result ];
         `, "1,2")
 
-        test(`
+		test(`
             result = 0;
             result--;
             [ result--, result ];
         `, "-1,-2")
 
-        test(`
+		test(`
             var object = { valueOf: function() { return 1; } };
             result = object++;
             [ result, typeof result ];
         `, "1,number")
 
-        test(`
+		test(`
             var object = { valueOf: function() { return 1; } };
             result = object--
             [ result, typeof result ];
         `, "1,number")
-    })
+	})
 }
 
 func TestBinaryLogicalOperation(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             abc = true
             def = false
             ghi = false
@@ -684,7 +666,7 @@ func TestBinaryLogicalOperation(t *testing.T) {
             result = abc && def || ghi && jkl
         `, false)
 
-        test(`
+		test(`
             abc = true
             def = true
             ghi = false
@@ -692,14 +674,14 @@ func TestBinaryLogicalOperation(t *testing.T) {
             result = abc && def || ghi && jkl
         `, true)
 
-    })
+	})
 }
 
 func TestBinaryBitwiseOperation(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             abc = 1 & 2;
             def = 1 & 3;
             ghi = 1 | 3;
@@ -707,14 +689,14 @@ func TestBinaryBitwiseOperation(t *testing.T) {
             mno = 1 ^ 3;
             [ abc, def, ghi, jkl, mno ];
         `, "0,1,3,3,2")
-    })
+	})
 }
 
 func TestBinaryShiftOperation(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             high = (1 << 30) - 1 + (1 << 30)
             low = -high - 1
             abc = 23 << 1
@@ -727,132 +709,132 @@ func TestBinaryShiftOperation(t *testing.T) {
             vwx = low >> 1
             yz = low >>> 1
         `)
-        test("abc", 46)
-        test("def", -53)
-        test("ghi", 92)
-        test("jkl", 0)
-        test("mno", 1)
-        test("pqr", 0)
-        test("stu", -1)
-        test("vwx", -1073741824)
-        test("yz", 1073741824)
-    })
+		test("abc", 46)
+		test("def", -53)
+		test("ghi", 92)
+		test("jkl", 0)
+		test("mno", 1)
+		test("pqr", 0)
+		test("stu", -1)
+		test("vwx", -1073741824)
+		test("yz", 1073741824)
+	})
 }
 
 func TestParenthesizing(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             abc = 1 + 2 * 3
             def = (1 + 2) * 3
             ghi = !(false || true)
             jkl = !false || true
         `)
-        test("abc", 7)
-        test("def", 9)
-        test("ghi", false)
-        test("jkl", true)
-    })
+		test("abc", 7)
+		test("def", 9)
+		test("ghi", false)
+		test("jkl", true)
+	})
 }
 
 func Test_instanceof(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             abc = {} instanceof Object;
         `, true)
 
-        test(`
+		test(`
             abc = "abc" instanceof Object;
         `, false)
 
-        test(`raise:
+		test(`raise:
             abc = {} instanceof "abc";
         `, "TypeError: Expecting a function in instanceof check, but got: abc")
 
-        test(`raise:
+		test(`raise:
             "xyzzy" instanceof Math;
         `, "TypeError")
-    })
+	})
 }
 
 func TestIn(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             abc = "prototype" in Object;
             def = "xyzzy" in Object;
             [ abc, def ];
         `, "true,false")
-    })
+	})
 }
 
 func Test_new(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             abc = new Boolean;
             def = new Boolean(1);
             [ abc, def ];
         `, "false,true")
-    })
+	})
 }
 
 func TestNewFunction(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             new Function("return 11")()
         `, 11)
 
-        test(`
+		test(`
             abc = 10
             new Function("abc += 1")()
             abc
         `, 11)
 
-        test(`
+		test(`
             new Function("a", "b", "c", "return b + 2")(10, 11, 12)
         `, 13)
 
-        test(`raise:
+		test(`raise:
             new 1
         `, "TypeError: 1 is not a function")
 
-        // TODO Better error reporting: new this
-        test(`raise:
+		// TODO Better error reporting: new this
+		test(`raise:
             new this
         `, "TypeError: [object environment] is not a function")
 
-        test(`raise:
+		test(`raise:
             new {}
         `, "TypeError: [object Object] is not a function")
-    })
+	})
 }
 
 func TestNewPrototype(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             abc = { 'xyzzy': 'Nothing happens.' }
             function Xyzzy(){}
             Xyzzy.prototype = abc;
             (new Xyzzy()).xyzzy
         `, "Nothing happens.")
-    })
+	})
 }
 
 func TestBlock(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             var abc=0;
             var ghi;
             def: {
@@ -866,137 +848,137 @@ func TestBlock(t *testing.T) {
             }
             [ abc,ghi ];
         `, "10,")
-    })
+	})
 }
 
 func Test_toString(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             [undefined+""]
         `, "undefined")
-    })
+	})
 }
 
 func TestEvaluationOrder(t *testing.T) {
-    tt(t, func() {
-        test, _ := test()
+	tt(t, func() {
+		test, _ := test()
 
-        test(`
+		test(`
             var abc = 0;
             abc < (abc = 1) === true;
         `, true)
-    })
+	})
 }
 
 func TestClone(t *testing.T) {
-    tt(t, func() {
-        vm1 := New()
-        vm1.Run(`
+	tt(t, func() {
+		vm1 := New()
+		vm1.Run(`
             var abc = 1;
         `)
 
-        vm2 := vm1.clone()
-        vm1.Run(`
+		vm2 := vm1.clone()
+		vm1.Run(`
             abc += 2;
         `)
-        vm2.Run(`
+		vm2.Run(`
             abc += 4;
         `)
 
-        is(vm1.getValue("abc"), 3)
-        is(vm2.getValue("abc"), 5)
-    })
+		is(vm1.getValue("abc"), 3)
+		is(vm2.getValue("abc"), 5)
+	})
 }
 
 func Test_debugger(t *testing.T) {
-    tt(t, func() {
-        called := false
+	tt(t, func() {
+		called := false
 
-        vm := New()
-        vm.SetDebuggerHandler(func(o *Otto) {
-            is(o, vm)
-            called = true
-        })
+		vm := New()
+		vm.SetDebuggerHandler(func(o *Otto) {
+			is(o, vm)
+			called = true
+		})
 
-        _, err := vm.Run(`debugger`)
-        is(err, nil)
-        is(called, true)
-    })
+		_, err := vm.Run(`debugger`)
+		is(err, nil)
+		is(called, true)
+	})
 
-    tt(t, func() {
-        called := false
+	tt(t, func() {
+		called := false
 
-        vm := New()
-        vm.SetDebuggerHandler(func(o *Otto) {
-            is(o, vm)
-            called = true
-        })
+		vm := New()
+		vm.SetDebuggerHandler(func(o *Otto) {
+			is(o, vm)
+			called = true
+		})
 
-        _, err := vm.Run(`null`)
-        is(err, nil)
-        is(called, false)
-    })
+		_, err := vm.Run(`null`)
+		is(err, nil)
+		is(called, false)
+	})
 
-    tt(t, func() {
-        vm := New()
+	tt(t, func() {
+		vm := New()
 
-        _, err := vm.Run(`debugger`)
-        is(err, nil)
-    })
+		_, err := vm.Run(`debugger`)
+		is(err, nil)
+	})
 }
 
 func Test_random(t *testing.T) {
-    tt(t, func() {
-        vm := New()
-        vm.SetRandomSource(func() float64 { return 1 })
+	tt(t, func() {
+		vm := New()
+		vm.SetRandomSource(func() float64 { return 1 })
 
-        r, err := vm.Run(`Math.random()`)
-        is(err, nil)
-        f, err := r.ToFloat()
-        is(err, nil)
-        is(f, 1)
-    })
+		r, err := vm.Run(`Math.random()`)
+		is(err, nil)
+		f, err := r.ToFloat()
+		is(err, nil)
+		is(f, 1)
+	})
 
-    tt(t, func() {
-        vm := New()
+	tt(t, func() {
+		vm := New()
 
-        r1, err := vm.Run(`Math.random()`)
-        is(err, nil)
-        f1, err := r1.ToFloat()
-        is(err, nil)
+		r1, err := vm.Run(`Math.random()`)
+		is(err, nil)
+		f1, err := r1.ToFloat()
+		is(err, nil)
 
-        r2, err := vm.Run(`Math.random()`)
-        is(err, nil)
-        f2, err := r2.ToFloat()
-        is(err, nil)
+		r2, err := vm.Run(`Math.random()`)
+		is(err, nil)
+		f2, err := r2.ToFloat()
+		is(err, nil)
 
-        is(f1 == f2, false)
-    })
+		is(f1 == f2, false)
+	})
 }
 
 func Test_stringArray(t *testing.T) {
-    getStrings := func() []string {
-        return []string{"these", "are", "strings"}
-    }
-    concatStrings := func(a []string) string {
-        if len(a) == 0 {
-            return ""
-        }
-        r := a[0]
-        for i := 1; i < len(a); i++ {
-            r += " "
-            r += a[i]
-        }
-        return r
-    }
-    tt(t, func() {
-        vm := New()
-        vm.Set("getStrings", getStrings)
-        vm.Set("concatStrings", concatStrings)
-        r1, err := vm.Run(`var a = getStrings(); concatStrings(a)`)
-        is(err, nil)
-        is(r1, "these are strings")
-    })
+	getStrings := func() []string {
+		return []string{"these", "are", "strings"}
+	}
+	concatStrings := func(a []string) string {
+		if len(a) == 0 {
+			return ""
+		}
+		r := a[0]
+		for i := 1; i < len(a); i++ {
+			r += " "
+			r += a[i]
+		}
+		return r
+	}
+	tt(t, func() {
+		vm := New()
+		vm.Set("getStrings", getStrings)
+		vm.Set("concatStrings", concatStrings)
+		r1, err := vm.Run(`var a = getStrings(); concatStrings(a)`)
+		is(err, nil)
+		is(r1, "these are strings")
+	})
 }

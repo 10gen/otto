@@ -333,10 +333,7 @@ func TestMakeCustomErrorReturn(t *testing.T) {
 		}
 		is(str, "CarrotError: carrots is life, carrots is love")
 
-		i, err := v.Export()
-		if err != nil {
-			panic(err)
-		}
+		i := v.Export()
 		t.Logf("%#v\n", i)
 	})
 }
@@ -434,10 +431,7 @@ func TestCreateNativeErrorReturn(t *testing.T) {
 		}
 		is(str, "CarrotError: carrots is life, carrots is love")
 
-		i, err := v.Export()
-		if err != nil {
-			panic(err)
-		}
+		i := v.Export()
 		t.Logf("%#v\n", i)
 	})
 }

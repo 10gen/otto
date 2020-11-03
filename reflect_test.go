@@ -619,8 +619,7 @@ func Test_reflectArray(t *testing.T) {
              `, "1,2.2,str")
 			val, err := vm.Get("abc")
 			is(err, nil)
-			abc, err := val.Export()
-			is(err, nil)
+			abc := val.Export()
 			is(abc, []interface{}{int64(1), 2.2, "str"})
 		}
 
@@ -632,8 +631,7 @@ func Test_reflectArray(t *testing.T) {
              `, "1,2,3")
 			val, err := vm.Get("abc")
 			is(err, nil)
-			abc, err := val.Export()
-			is(err, nil)
+			abc := val.Export()
 			is(abc, []interface{}{int64(1), int64(2), int64(3)})
 		}
 
@@ -647,8 +645,7 @@ func Test_reflectArray(t *testing.T) {
 
 			val, err := vm.Get("abc")
 			is(err, nil)
-			abc, err := val.Export()
-			is(err, nil)
+			abc := val.Export()
 			is(abc, []interface{}{"str1", "str2", "str3"})
 		}
 
@@ -656,8 +653,7 @@ func Test_reflectArray(t *testing.T) {
 		{
 			called := false
 			vm.Set("blah", func(c FunctionCall) Value {
-				v, err := c.Argument(0).Export()
-				is(err, nil)
+				v := c.Argument(0).Export()
 				is(v, []interface{}{int64(3)})
 				called = true
 				return UndefinedValue()

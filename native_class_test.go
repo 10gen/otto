@@ -10,7 +10,7 @@ func TestNativeClass(t *testing.T) {
 
 		ctor := func(call FunctionCall) interface{} {
 			call.This.Object().Set("woof", 2)
-			exp, _ := call.ArgumentList[0].Export()
+			exp := call.ArgumentList[0].Export()
 			return exp
 		}
 		hello, err := vm.ToValue(func(call FunctionCall) Value {
@@ -18,7 +18,7 @@ func TestNativeClass(t *testing.T) {
 		})
 		is(err, nil)
 		toString, err := vm.ToValue(func(call FunctionCall) Value {
-			exp, _ := call.This.Export()
+			exp := call.This.Export()
 			return toValue_string(exp.(string))
 		})
 		is(err, nil)
