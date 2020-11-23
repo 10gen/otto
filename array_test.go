@@ -109,7 +109,16 @@ func TestArray_iterator(t *testing.T) {
             var iterator = a.entries();
 
             iterator.next().value + " " + iterator.next().value + " " + iterator.next().value
-		`, "0,a 1,b 2,c")
+        `, "0,a 1,b 2,c")
+
+		test(`
+            var a = ['a', 'b', 'c']; 
+            var hasSymbolProperty = false;
+            if(a.entries()[Symbol.iterator]()) {
+                hasSymbolProperty = true;
+            }
+            hasSymbolProperty
+        `, true)
 
 		test(`
             var iterator = [1, 2, 3]["Symbol(Symbol.iterator)"]();
