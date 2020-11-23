@@ -859,3 +859,88 @@ func builtinArray_reduceRight(call FunctionCall) Value {
 	}
 	panic(call.runtime.panicTypeError())
 }
+
+func builtinArray_entries(call FunctionCall) Value {
+	arrayItems := []Value{}
+	this := call.thisObject()
+	this.enumerate(false, func(name string) bool {
+		arrayItems = append(arrayItems, toValue_object(call.runtime.newArrayOf([]Value{
+			toValue_string(name),
+			this.get(name),
+		})))
+		return true
+	})
+
+	next_function := &_object{
+		runtime:     call.runtime,
+		class:       "Function",
+		objectClass: _classObject,
+		prototype:   call.runtime.global.FunctionPrototype,
+		extensible:  true,
+		property: map[string]_property{
+			"length": {
+				mode: 0,
+				value: Value{
+					kind:  valueNumber,
+					value: 0,
+				},
+			},
+		},
+		propertyOrder: []string{
+			"length",
+		},
+		value: _nativeFunctionObject{
+			name: "next",
+			call: builtinArrayIterator_next(arrayItems),
+		},
+	}
+
+	entriesIterator := &_object{
+		runtime:     call.runtime,
+		class:       "Function",
+		objectClass: _classObject,
+		prototype:   call.runtime.global.FunctionPrototype,
+		extensible:  true,
+		property: map[string]_property{
+			"length": _property{
+				mode: 0,
+				value: Value{
+					kind:  valueNumber,
+					value: 0,
+				},
+			},
+		},
+		propertyOrder: []string{
+			"length",
+		},
+		value: _nativeFunctionObject{
+			name: "values",
+			call: builtinArray_entries,
+		},
+	}
+
+	return toValue_object(&_object{
+		runtime:     call.runtime,
+		class:       "Iterator",
+		objectClass: _classObject,
+		prototype:   call.runtime.global.ObjectPrototype,
+		extensible:  true,
+		value:       nil,
+		property: map[string]_property{
+			"next": {
+				mode: 0101,
+				value: Value{
+					kind:  valueObject,
+					value: next_function,
+				},
+			},
+			symbolIteratorTagPropertyName: _property{
+				mode: 0101,
+				value: Value{
+					kind:  valueObject,
+					value: entriesIterator,
+				},
+			},
+		},
+	})
+}

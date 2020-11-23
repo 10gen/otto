@@ -1801,6 +1801,29 @@ func _newContext(runtime *_runtime) {
 				call: builtinArray_isArray,
 			},
 		}
+		entries_function := &_object{
+			runtime:     runtime,
+			class:       "Function",
+			objectClass: _classObject,
+			prototype:   runtime.global.FunctionPrototype,
+			extensible:  true,
+			property: map[string]_property{
+				"length": _property{
+					mode: 0,
+					value: Value{
+						kind:  valueNumber,
+						value: 1,
+					},
+				},
+			},
+			propertyOrder: []string{
+				"length",
+			},
+			value: _nativeFunctionObject{
+				name: "entries",
+				call: builtinArray_entries,
+			},
+		}
 		runtime.global.ArrayPrototype = &_object{
 			runtime:     runtime,
 			class:       "Array",
@@ -1984,6 +2007,13 @@ func _newContext(runtime *_runtime) {
 						value: reduceRight_function,
 					},
 				},
+				"entries": _property{
+					mode: 0101,
+					value: Value{
+						kind:  valueObject,
+						value: entries_function,
+					},
+				},
 			},
 			propertyOrder: []string{
 				"length",
@@ -2008,6 +2038,7 @@ func _newContext(runtime *_runtime) {
 				"filter",
 				"reduce",
 				"reduceRight",
+				"entries",
 			},
 		}
 		runtime.global.Array = &_object{
