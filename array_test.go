@@ -121,6 +121,13 @@ func TestArray_iterator(t *testing.T) {
         `, true)
 
 		test(`
+            var a = ['a', 'b', 'c'];
+            var iterator = a.entries();
+            var val = iterator.next().value[0]
+            val
+        `, 0)
+
+		test(`
             var iterator = [1, 2, 3]["Symbol(Symbol.iterator)"]();
 
             one = iterator.next().value

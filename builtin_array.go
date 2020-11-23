@@ -864,8 +864,12 @@ func builtinArray_entries(call FunctionCall) Value {
 	arrayItems := []Value{}
 	this := call.thisObject()
 	this.enumerate(false, func(name string) bool {
+		idx, err := strconv.Atoi(name)
+		if err != nil {
+			panic(call.runtime.panicTypeError())
+		}
 		arrayItems = append(arrayItems, toValue_object(call.runtime.newArrayOf([]Value{
-			toValue_string(name),
+			toValue_int(idx),
 			this.get(name),
 		})))
 		return true
