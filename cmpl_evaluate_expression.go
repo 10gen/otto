@@ -176,7 +176,7 @@ func (self *_runtime) cmpl_evaluate_nodeBracketExpression(node *_nodeBracketExpr
 
 	switch val := memberValue.value.(type) {
 	case *_object:
-		if val.class == "Symbol" && val.value.(_symbolObject).description != "Symbol.iterator" {
+		if val.class == "Symbol" && val.value.(_symbolObject).description != "Symbol.iterator" && val.value.(_symbolObject).description != "Symbol.toStringTag" {
 			memberStr = memberValue.symbolString()
 		}
 	}
