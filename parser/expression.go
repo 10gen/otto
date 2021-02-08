@@ -2,6 +2,8 @@ package parser
 
 import (
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/robertkrimen/otto/ast"
 	"github.com/robertkrimen/otto/file"
@@ -243,6 +245,27 @@ func (self *_parser) parseVariableDeclarationList(var_ file.Idx) []ast.Expressio
 	return list
 }
 
+// hexToIntStr will convert a hex value used as a key for an object
+// to its int value which is then used as a string. This is to prevent
+// an object like { 0x16: "hello" } to turn into {"0x16": "hello"}
+// instead of { "22": "hello"} (0x16 is 22 in decimal notation)
+func hexToIntStr(literal string) string {
+	var hexStr string
+	if strings.HasPrefix(literal, "0x") {
+		hexStr = strings.Replace(literal, "0x", "", -1)
+		hexStr = strings.Replace(hexStr, "0X", "", -1)
+	}
+
+	if hexStr != "" {
+		hexInt, hexIntErr := strconv.ParseInt(hexStr, 16, 64)
+		if hexIntErr == nil {
+			return strconv.FormatInt(hexInt, 10)
+		}
+	}
+
+	return literal
+}
+
 func (self *_parser) parseObjectPropertyKey() (string, string) {
 	idx, tkn, literal := self.idx, self.token, self.literal
 	value := ""
@@ -256,6 +279,7 @@ func (self *_parser) parseObjectPropertyKey() (string, string) {
 		value = literal
 	case token.NUMBER:
 		var err error
+		literal = hexToIntStr(literal)
 		_, err = parseNumberLiteral(literal)
 		if err != nil {
 			self.error(idx, err.Error())
