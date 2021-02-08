@@ -107,8 +107,8 @@ func TestObject_create(t *testing.T) {
 		test(`
 		    var myO = { 0x16: "hexciting" };
 
-		    myO[22]
-		`, "hexciting")
+		    [myO[22], myO[0x16]]
+        `, "hexciting,hexciting")
 	})
 }
 
